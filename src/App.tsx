@@ -9,6 +9,7 @@ import {
   useSensors,
   DragEndEvent,
 } from "@dnd-kit/core";
+import Select from "react-select";
 import {
   arrayMove,
   SortableContext,
@@ -16,22 +17,39 @@ import {
   verticalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
-
 import { CSS } from "@dnd-kit/utilities";
+
+const Jokers = ["Supernova", "Green Joker", "Ride The Bus"];
 
 export default function App() {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { jokers, createJoker } = useAppStore();
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+        delay: 200,
+        tolerance: 5,
+      },
+      canStartDragging: (event: any) => {
+        return !event.target.closest("button");
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
 
+  const {
+    jokers,
+    pushJoker,
+    setJokers,
+    hands,
+    setHand = () => {},
+  } = useAppStore();
+
   function onClickCreateJoker() {
-    createJoker(inputRef.current!.value);
+    pushJoker(inputRef.current!.value);
     inputRef.current!.value = "";
   }
   async function handleDragEnd(event: DragEndEvent) {
@@ -49,38 +67,69 @@ export default function App() {
   }
 
   return (
-    <div className="container-fluid px-4">
-      <div className="d-flex gap-2">
-        <button
-          className="btn btn-sm btn-primary nowrap"
-          onClick={onClickCreateJoker}
+    <div className="d-flex">
+      <div className="container-fluid px-4">
+        <div className="d-flex gap-2">
+          <button
+            className="btn btn-sm btn-primary nowrap"
+            onClick={onClickCreateJoker}
+          >
+            New Jonkler
+          </button>
+          <Select options={Jokers} />
+        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          New Jonkler
-        </button>
-        <input className="form-control" ref={inputRef} />
+          <SortableContext
+            items={jokers.map((item) => item.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {jokers.map((joker) => (
+              <JokerComponent key={joker.id} joker={joker} />
+            ))}
+          </SortableContext>
+        </DndContext>
       </div>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={jokers.map((item) => item.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {jokers.map((joker) => (
-            <JokerComponent key={joker.id} joker={joker} />
+      <table>
+        <thead>
+          <tr>
+            <td>#</td>
+            <td>Hand</td>
+            <td>Chips</td>
+            <td>Mult</td>
+            <td>Score</td>
+            <td>Cumulative</td>
+          </tr>
+        </thead>
+        <tbody>
+          {hands.map((hand, i) => (
+            <tr>
+              <td>{i + 1}</td>
+              <td>
+                <input
+                  value={hand.cards}
+                  onChange={(e) => setHand(i, e.target.value)}
+                />
+              </td>
+              <td>{hand.chips}</td>
+              <td>{hand.mult}</td>
+              <td>{hand.score}</td>
+              <td>{hand.cumulative}</td>
+            </tr>
           ))}
-        </SortableContext>
-      </DndContext>
+        </tbody>
+      </table>
     </div>
   );
 }
 
-type JokerProps = { joker: Joker; deleteJoker: () => void };
-function JokerComponent({ joker, deleteJoker }) {
+function JokerComponent({ joker }: any) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: joker.id });
+  const deleteJoker = useAppStore((state) => state.deleteJoker);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -95,7 +144,8 @@ function JokerComponent({ joker, deleteJoker }) {
       {...listeners}
       className="d-flex align-items-center justify-content-between p-3 bg-white border rounded mb-2"
     >
-      {name}
+      {joker.name}
+      <button onClick={() => deleteJoker(joker.id)}>Remove</button>
     </div>
   );
 }
