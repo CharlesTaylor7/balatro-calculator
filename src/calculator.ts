@@ -358,56 +358,179 @@ export const JOKERS = [
   "Splash",
 ];
 export const JOKER_SCORING: Record<JokerName, JokerVisitor> = {
+  // Scaling mult jokers
+  "Supernova": {
+    visitHand: (context, hand) => {
+      if (hand.name) {
+        context.jokers.Supernova[hand.name] = (context.jokers.Supernova[hand.name] || 0) + 1;
+      }
+    },
+  },
+  "Green Joker": {
+    visitHand: (context, hand) => {
+      context.jokers["Green Joker"] = (context.jokers["Green Joker"] || 0) + 1;
+    },
+  },
+  "Ride The Bus": {
+    visitHand: (context, hand) => {
+      context.jokers["Ride The Bus"] = (context.jokers["Ride The Bus"] || 0) + 1;
+    },
+  },
+
+  // Scaling chips jokers
+  "Runner": {
+    visitHand: (context, hand) => {
+      if (hand.cards.length >= 5) context.chips += 20 * hand.cards.length;
+    },
+  },
+  "Square Joker": {
+    visitHand: (context, hand) => {
+      if (hand.cards.length >= 4) context.chips += 15 * hand.cards.length;
+    },
+  },
+
+  // Negative scaling jokers
+  "Blue Joker": {
+    visitHand: (context, hand) => {
+      context.mult -= hand.cards.length;
+    },
+  },
+  "Ice Cream": {
+    visitHand: (context, hand) => {
+      context.chips -= 10 * hand.cards.length;
+    },
+  },
+  "Popcorn": {
+    visitHand: (context, hand) => {
+      context.chips -= 5 * hand.cards.length;
+    },
+  },
+
+  // Flat hand based jokers
   "Sly Joker": {
     visitHand: (context, hand) => {
       if (HAND_MATCHERS.pair(hand)) context.chips += 50;
     },
   },
-
   "Jolly Joker": {
     visitHand: (context, hand) => {
       if (HAND_MATCHERS.pair(hand)) context.mult += 8;
     },
   },
-
   "Clever Joker": {
     visitHand: (context, hand) => {
       if (HAND_MATCHERS["two-pair"](hand)) context.chips += 80;
     },
   },
-
   "Mad Joker": {
     visitHand: (context, hand) => {
       if (HAND_MATCHERS["two-pair"](hand)) context.mult += 10;
     },
   },
-
   "Wily Joker": {
     visitHand: (context, hand) => {
-      if (HAND_MATCHERS["two-pair"](hand)) context.mult += 10;
+      if (HAND_MATCHERS["three-of-a-kind"](hand)) context.chips += 100;
     },
   },
-
   "Zany Joker": {
     visitHand: (context, hand) => {
-      if (HAND_MATCHERS["two-pair"](hand)) context.mult += 10;
+      if (HAND_MATCHERS["three-of-a-kind"](hand)) context.mult += 12;
     },
   },
   "Crafty Joker": {
     visitHand: (context, hand) => {
-      if (HAND_MATCHERS["two-pair"](hand)) context.mult += 10;
+      if (HAND_MATCHERS.flush(hand)) context.chips += 80;
+    },
+  },
+  "Droll Joker": {
+    visitHand: (context, hand) => {
+      if (HAND_MATCHERS.flush(hand)) context.mult += 10;
+    },
+  },
+  "Devious Joker": {
+    visitHand: (context, hand) => {
+      if (HAND_MATCHERS.straight(hand)) context.chips += 100;
+    },
+  },
+  "Crazy Joker": {
+    visitHand: (context, hand) => {
+      if (HAND_MATCHERS.straight(hand)) context.mult += 12;
+    },
+  },
+  "Half Joker": {
+    visitHand: (context, hand) => {
+      if (hand.cards.length < 3) context.mult += 20;
     },
   },
 
-  "Droll Joker": {
-    visitHand: (context, hand) => {
-      if (HAND_MATCHERS["two-pair"](hand)) context.mult += 10;
+  // Per card based jokers
+  "Scholar": {
+    visitCard: (context, card) => {
+      if (card.rank === "A") {
+        context.chips += 20;
+        context.mult += 4;
+      }
+    },
+  },
+  "Walkie Talkie": {
+    visitCard: (context, card) => {
+      if (card.rank === "T" || card.rank === "4") {
+        context.chips += 10;
+        context.mult += 4;
+      }
+    },
+  },
+  "Scary Face": {
+    visitCard: (context, card) => {
+      if (card.rank === "J" || card.rank === "Q" || card.rank === "K") {
+        context.chips += 30;
+      }
+    },
+  },
+  "Smiley Joker": {
+    visitCard: (context, card) => {
+      if (card.rank === "J" || card.rank === "Q" || card.rank === "K") {
+        context.mult += 5;
+      }
+    },
+  },
+  "Even Steven": {
+    visitCard: (context, card) => {
+      const order = rankToOrder(card.rank);
+      if (order % 2 === 0) context.mult += 4;
+    },
+  },
+  "Odd Todd": {
+    visitCard: (context, card) => {
+      const order = rankToOrder(card.rank);
+      if (order % 2 === 1) context.chips += 31;
+    },
+  },
+  "Greedy Joker": {
+    visitCard: (context, card) => {
+      if (card.suit === "D") context.mult += 3;
+    },
+  },
+  "Lusty Joker": {
+    visitCard: (context, card) => {
+      if (card.suit === "H") context.mult += 3;
+    },
+  },
+  "Wrathful Joker": {
+    visitCard: (context, card) => {
+      if (card.suit === "S") context.mult += 3;
+    },
+  },
+  "Gluttonous Joker": {
+    visitCard: (context, card) => {
+      if (card.suit === "C") context.mult += 3;
     },
   },
 
-  "Droll Joker": {
-    visitHand: (context, hand) => {
-      if (HAND_MATCHERS["two-pair"](hand)) context.mult += 10;
-    },
-  },
+  // Misc jokers that affect card behavior rather than scoring
+  "Hanging Chad": {},
+  "Photograph": {},
+  "Misprint": {},
+  "Hanging Fist": {},
+  "Splash": {},
 };
