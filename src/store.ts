@@ -13,6 +13,7 @@ export type AppState = {
   jokers: Joker[];
   setJokers: (jokers: Joker[]) => void;
   deleteJoker: (id: JokerId) => void;
+  updateJoker: (index: number, joker: Partial<Joker>) => void;
   pushJoker: (name: JokerName | null) => void;
   // hand name or exact cards
   rounds: string[];
@@ -38,6 +39,13 @@ export const useAppStore = create<AppState>()(
           { name, id: newId(), mult: 0, chips: 0, polychrome: false },
         ],
       })),
+    updateJoker: (index: number, joker: Partial<Joker>) => {
+      const { jokers } = get();
+      const copy = Array.from(jokers);
+      // @ts-ignore
+      Object.assign(copy[index], joker);
+      set({ jokers: copy });
+    },
 
     rounds: makeArray(4, () => ""),
     hands: () => {

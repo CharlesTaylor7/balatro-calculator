@@ -13,7 +13,7 @@ export type Joker = {
   // name is nullable, because plenty of jokers either:
   // have flat scoring: e.x. Jimbo, Gros Michel, etc.
   // have no scoring but have an edition that makes them score
-  name?: JokerName;
+  name: JokerName | Nullish;
   id: string;
   chips: number;
   mult: number;

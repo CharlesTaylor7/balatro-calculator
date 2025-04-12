@@ -1,6 +1,6 @@
-import { useId, useRef } from "react";
+import { useId } from "react";
 import { useAppStore } from "./store";
-import { JOKERS } from "./calculator";
+import { Joker, JokerName, JOKERS } from "./calculator";
 import {
   DndContext,
   closestCenter,
@@ -71,18 +71,22 @@ export function JokerList() {
           items={jokers.map((item) => item.id)}
           strategy={verticalListSortingStrategy}
         >
-          {jokers.map((joker) => (
-            <JokerComponent key={joker.id} joker={joker} />
+          {jokers.map((joker, index) => (
+            <JokerComponent key={joker.id} index={index} joker={joker} />
           ))}
         </SortableContext>
       </DndContext>
     </div>
   );
 }
-function JokerComponent({ joker }: any) {
+type JokerProps = {
+  joker: Joker;
+  index: number;
+};
+function JokerComponent({ joker, index }: JokerProps) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: joker.id });
-  const deleteJoker = useAppStore((state) => state.deleteJoker);
+  const { deleteJoker, updateJoker } = useAppStore();
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -108,6 +112,11 @@ function JokerComponent({ joker }: any) {
             defaultValue={joker.name}
             options={JOKERS.map((j) => ({ value: j, label: j }))}
             placeholder="Any Joker"
+            onChange={(option) =>
+              updateJoker(index, { name: option as JokerName })
+            }
+            isClearable
+            clearValue={() => updateJoker(index, { name: null })}
           />
 
           <button
@@ -137,6 +146,9 @@ function JokerComponent({ joker }: any) {
               id={chipsId}
               type="number"
               defaultValue={joker.chips}
+              onChange={(e) =>
+                updateJoker(index, { chips: Number(e.target.value) })
+              }
             />
 
             <input
@@ -144,6 +156,9 @@ function JokerComponent({ joker }: any) {
               id={multId}
               type="number"
               defaultValue={joker.mult}
+              onChange={(e) =>
+                updateJoker(index, { chips: Number(e.target.value) })
+              }
             />
 
             <input
@@ -151,6 +166,9 @@ function JokerComponent({ joker }: any) {
               id={polychromeId}
               type="Checkbox"
               defaultChecked={joker.polychrome}
+              onChange={(e) =>
+                updateJoker(index, { polychrome: e.target.checked })
+              }
             />
           </div>
         </div>
