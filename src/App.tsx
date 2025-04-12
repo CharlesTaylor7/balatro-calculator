@@ -3,7 +3,7 @@ import { Rounds } from "./Rounds";
 
 export default function App() {
   return (
-    <div>
+    <div className="d-flex">
       <JokerList />
       <Rounds />
     </div>

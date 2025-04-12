@@ -1,5 +1,6 @@
 import { useId, useRef } from "react";
 import { useAppStore } from "./store";
+import { JOKERS } from "./calculator";
 import {
   DndContext,
   closestCenter,
@@ -53,16 +54,14 @@ export function JokerList() {
   }
 
   return (
-    <div className="container-fluid px-4">
-      <div className="d-flex gap-2">
-        <button
-          className="btn btn-sm btn-primary nowrap"
-          onClick={() => pushJoker(null)}
-        >
-          New Joker
-        </button>
-        <Select />
-      </div>
+    <div className="col-4">
+      <button
+        className="btn btn-sm btn-primary nowrap"
+        onClick={() => pushJoker(null)}
+      >
+        New Joker
+      </button>
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -92,6 +91,7 @@ function JokerComponent({ joker }: any) {
   const chipsId = useId();
   const multId = useId();
   const polychromeId = useId();
+  const nameId = useId();
 
   return (
     <div
@@ -99,36 +99,62 @@ function JokerComponent({ joker }: any) {
       style={style}
       {...attributes}
       {...listeners}
-      className="d-flex align-items-center justify-content-between p-3 bg-white border rounded mb-2"
+      className="card cursor-grab"
     >
-      <label className="form-label">
-        Name
-        <input
-          className="form-control form-control-sm"
-          type="text"
-          value={joker.name}
-        />
-      </label>
-      <label className="form-label" htmlFor={chipsId}>
-        Chips
-        <input id={chipsId} type="number" value={joker.chips} />
-      </label>
+      <div className="card-body">
+        <div className="d-flex flex-row justify-content-between">
+          <Select
+            id={nameId}
+            defaultValue={joker.name}
+            options={JOKERS.map((j) => ({ value: j, label: j }))}
+            placeholder="Any Joker"
+          />
 
-      <label htmlFor={multId}>
-        Mult
-        <input id={multId} type="number" value={joker.mult} />
-      </label>
+          <button
+            className="btn btn-sm btn-danger"
+            onClick={() => deleteJoker(joker.id)}
+          >
+            x
+          </button>
+        </div>
+        <div className="row">
+          <div className="col">
+            <label className="form-label d-block cursor-grab" htmlFor={chipsId}>
+              Chips
+            </label>
 
-      <label htmlFor={polychromeId}>
-        Polychrome?
-        <input id={polychromeId} type="Checkbox" value={joker.polychrome} />
-      </label>
-      <button
-        className="btn btn-sm btn-danger"
-        onClick={() => deleteJoker(joker.id)}
-      >
-        Remove
-      </button>
+            <label className="form-label d-block cursor-grab" htmlFor={multId}>
+              Mult
+            </label>
+
+            <label htmlFor={polychromeId} className="form-check-label d-block">
+              Polychrome?
+            </label>
+          </div>
+          <div className="col w-25">
+            <input
+              className="form-control form-control-sm"
+              id={chipsId}
+              type="number"
+              defaultValue={joker.chips}
+            />
+
+            <input
+              className="form-control form-control-sm"
+              id={multId}
+              type="number"
+              defaultValue={joker.mult}
+            />
+
+            <input
+              className="form-check-input"
+              id={polychromeId}
+              type="Checkbox"
+              defaultChecked={joker.polychrome}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

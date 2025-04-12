@@ -33,7 +33,10 @@ export const useAppStore = create<AppState>()(
       })),
     pushJoker: (name: JokerName | null) =>
       set((state: AppState) => ({
-        jokers: [...state.jokers, { name, id: newId() }],
+        jokers: [
+          ...state.jokers,
+          { name, id: newId(), mult: 0, chips: 0, polychrome: false },
+        ],
       })),
 
     rounds: makeArray(4, () => ""),

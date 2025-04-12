@@ -293,7 +293,7 @@ const HAND_SCORING: Record<HandName, Score> = {
 // List is intentionally not exhaustive.
 // focused on variable scoring jokers only,
 // flat chips/mult/xmult can be added separately
-const JOKERS = [
+export const JOKERS = [
   // scaling mult
   "Supernova",
   "Green Joker",
