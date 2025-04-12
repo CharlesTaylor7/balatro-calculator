@@ -16,37 +16,42 @@ export type AppState = {
   pushJoker: (name: string) => void;
   // hand name or exact cards
   rounds: string[];
-  hands: Hand[];
+  hands: () => Hand[];
+  setHand: (index: number, hand: string) => Hand[];
 };
 
 export const useAppStore = create<AppState>()(
   // @ts-ignore
-  devtools(
-    persist(
-      (set: any, get: any) => ({
-        jokers: [],
-        setJokers: (jokers: Joker[]) => set({ jokers }),
-        deleteJoker: (id) =>
-          // @ts-ignore
-          set((state) => ({
-            // @ts-ignore
-            jokers: state.jokers.filter((joker) => joker.id !== id),
-          })),
-        pushJoker: (name: string) =>
-          set((state: AppState) => ({
-            jokers: [...state.jokers, { name, id: newId() }],
-          })),
+  devtools((set: any, get: any) => ({
+    jokers: [],
+    setJokers: (jokers: Joker[]) => set({ jokers }),
+    deleteJoker: (id) =>
+      // @ts-ignore
+      set((state) => ({
+        // @ts-ignore
+        jokers: state.jokers.filter((joker) => joker.id !== id),
+      })),
+    pushJoker: (name: string) =>
+      set((state: AppState) => ({
+        jokers: [...state.jokers, { name, id: newId() }],
+      })),
 
-        rounds: makeArray(4, () => ""),
-        hands() {
-          const { rounds, jokers } = get();
-          return scoreRounds(rounds, jokers);
-        },
+    rounds: makeArray(4, () => ""),
+    hands: () => {
+      const { rounds, jokers } = get();
+      // console.log(rounds, jokers);
+      return scoreRounds(rounds, jokers);
+    },
+    setHand: (index, hand) =>
+      set((state: AppState) => {
+        const rounds = Array.from(state.rounds);
+        rounds.splice(index, 1, hand);
+        return { rounds };
       }),
-      { name: "balatroStore" },
-    ),
-  ),
+  })),
 );
+// TODO: persist data
+// { name: "balatro" },
 
 function makeArray<T>(length: number, fn: (k: number) => T) {
   return Array.from({ length }, (_, k) => fn(k));

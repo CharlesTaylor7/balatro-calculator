@@ -7,7 +7,7 @@ import { groupBy, maxBy, range } from "lodash";
 //
 
 // TYPES
-type Score = { chips: number; mult: number };
+type Score = { name: HandName | null; chips: number; mult: number };
 export type Joker = { name: string; id: string };
 export type JokerId = Joker["id"];
 export type Hand = {
@@ -16,9 +16,10 @@ export type Hand = {
   mult: number;
   score: number;
   cumulative: number;
+  name: HandName | null;
 };
 
-type HAND_NAME = (typeof HANDS)[number];
+type HandName = (typeof HANDS)[number];
 type HandDetails = {
   groups: { rank: Rank; cards: Card[] }[];
   cards: Card[];
@@ -45,6 +46,9 @@ type Card = {
 // ts-nocheck
 function score(hand: string, _jokers: Joker[]): Score {
   const cards = parseHand(hand);
+  //  nothing matches an empty hand
+  if (cards.length === 0) return { name: null, chips: 0, mult: 0 };
+
   const groups = Object.entries(groupBy(cards, (c) => c.rank)).map((group) => ({
     rank: group[0] as Rank,
     cards: group[1],
@@ -66,12 +70,12 @@ function score(hand: string, _jokers: Joker[]): Score {
     }, mult);
 
     return {
+      name: handName,
       chips: card_chips,
       mult: card_mult,
     };
   }
-  // high-card should always match
-  throw new Error("no match");
+  throw new Error("no matching hand");
 }
 
 function rankToOrder(rank: Rank): number {
@@ -121,7 +125,7 @@ function rankToChips(rank: Rank) {
   }
 }
 
-export function scoreRounds(rounds: string[], jokers: Joker[]) {
+export function scoreRounds(rounds: string[], jokers: Joker[]): Hand[] {
   const hands: Hand[] = [];
   let cumulative = 0;
   for (const hand of rounds) {
@@ -147,6 +151,7 @@ export function parseHand(hand: string): Card[] {
   for (let order = 0; order < rawCards.length; order++) {
     const raw = rawCards[order];
     const match = raw.match(CARD_REGEX);
+    if (!match) return cards;
     const rank = match!.groups!["rank"] as Rank;
     const suit = "unknown" as Suit;
     const chips = match!.groups!["chips"];
@@ -196,8 +201,11 @@ const HANDS = [
   "high-card",
 ] as const;
 
-const HAND_MATCHERS: Record<HAND_NAME, HandMatcher> = {
-  "high-card": (hand) => [maxBy(hand.cards, (c) => rankToChips(c.rank))!],
+const HAND_MATCHERS: Record<HandName, HandMatcher> = {
+  "high-card": (hand) => {
+    if (hand.cards.length === 0) return null;
+    return [maxBy(hand.cards, (c) => rankToChips(c.rank))!];
+  },
   pair: (hand) => hand.groups.find((g) => g.cards.length == 2)?.cards,
   "three-of-a-kind": (hand) =>
     hand.groups.find((g) => g.cards.length == 3)?.cards,
@@ -209,15 +217,19 @@ const HAND_MATCHERS: Record<HAND_NAME, HandMatcher> = {
     hand.groups.find((g) => g.cards.length == 5)?.cards,
 
   "full-house": (hand) => {
-    /* eslint-disable */
-    const three = hand.groups.find((g) => g.cards.length == 3)?.cards!;
-    const two = hand.groups.find((g) => g.cards.length == 2)?.cards!;
-    /* eslint-enable */
-    return [...three, ...two];
+    const three = hand.groups.find((g) => g.cards.length == 3)?.cards;
+    const two = hand.groups.find((g) => g.cards.length == 2)?.cards;
+
+    return three && two ? [...three, ...two] : null;
   },
 
-  "two-pair": (hand) =>
-    hand.groups.filter((g) => g.cards.length == 2).flatMap((g) => g.cards),
+  "two-pair": (hand) => {
+    const pairs = hand.groups
+      .filter((g) => g.cards.length == 2)
+      .flatMap((g) => g.cards);
+
+    return pairs.length === 4 ? pairs : null;
+  },
   flush: (hand) =>
     hand.cards.length == 5 &&
     hand.cards.filter((c) => c.suit == hand.cards[0].suit)
@@ -246,7 +258,7 @@ const HAND_MATCHERS: Record<HAND_NAME, HandMatcher> = {
     HAND_MATCHERS.flush(hand) && HAND_MATCHERS["full-house"](hand),
 };
 
-const HAND_SCORING: Record<HAND_NAME, Score> = {
+const HAND_SCORING: Record<HandName, Score> = {
   "high-card": { chips: 5, mult: 1 },
   pair: { chips: 10, mult: 2 },
   "two-pair": { chips: 20, mult: 2 },
