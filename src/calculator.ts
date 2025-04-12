@@ -10,28 +10,34 @@ import { groupBy, maxBy, range } from "lodash";
 type Score = { chips: number; mult: number };
 type Scored = Score & { name: HandName | null };
 
-type ScoringContext = Score & {
-  jokers: JokerContext;
+type ScoringContext<J> = Score & {
+  joker: Joker<J>;
   // levels
   planets: Record<HandName, number>;
+  hands: Record<HandName, number>;
 };
 
-type JokerVisitor = {
-  visitCard?: (context: ScoringContext, card: Card) => void;
-  visitHand?: (context: ScoringContext, hand: HandDetails) => void;
+type JokerVisitor<J> = {
+  visitCard?: (context: ScoringContext<J>, card: Card) => void;
+  visitHand?: (
+    context: ScoringContext<J>,
+    hand: HandDetails & { name: HandName; scoring: Card[] },
+  ) => void;
 };
 
-export type Joker = {
+export type Joker<Name = null> = {
   // name is nullable, because plenty of jokers either:
   // have flat scoring: e.x. Jimbo, Gros Michel, etc.
   // have no scoring but have an edition that makes them score
-  name: JokerName | Nullish;
+  name: Name;
   id: string;
   chips: number;
   mult: number;
   polychrome: boolean;
+  context: Name extends keyof JokerContext ? JokerContext[Name] : never;
 };
-export type JokerId = Joker["id"];
+
+export type JokerId = Joker<unknown>["id"];
 export type Hand = {
   cards: string;
   chips: number;
@@ -69,7 +75,10 @@ type Card = Readonly<{
 type JokerContext = {
   "Green Joker": number;
   "Ride The Bus": number;
-  Supernova: Record<HandName, number>;
+  Photograph: boolean;
+  Obelisk: {
+    counter: number;
+  };
 };
 
 function __assertSubType(item: keyof JokerContext): JokerName {
@@ -78,7 +87,7 @@ function __assertSubType(item: keyof JokerContext): JokerName {
 
 // FUNCTIONS
 // ts-nocheck
-function score(hand: string, jokers: Joker[]): Scored {
+function score(hand: string, jokers: Joker<unknown>[]): Scored {
   const cards = parseHand(hand);
   //  nothing matches an empty hand
   if (cards.length === 0) return { name: null, chips: 0, mult: 0 };
@@ -351,58 +360,68 @@ export const JOKERS = [
   "Wrathful Joker", // spade: +3 mult
   "Gluttonous Joker", // club: +3 mult
   //misc
+  "Obelisk",
   "Hanging Chad",
   "Photograph",
   "Misprint",
   "Hanging Fist",
   "Splash",
 ];
-export const JOKER_SCORING: Record<JokerName, JokerVisitor> = {
+
+function visitCard<J extends JokerName>(joker: J,  context: ScoringContext<J>){
+}
+
+function visitHand<J extends JokerName>(joker: J,  context: ScoringContext<J>){
+
+
+const SCORING_JOKERS = {
   // Scaling mult jokers
-  "Supernova": {
+  Supernova: {
     visitHand: (context, hand) => {
-      if (hand.name) {
-        context.jokers.Supernova[hand.name] = (context.jokers.Supernova[hand.name] || 0) + 1;
-      }
+      context.mult += context.hands[hand.name];
     },
   },
   "Green Joker": {
-    visitHand: (context, hand) => {
-      context.jokers["Green Joker"] = (context.jokers["Green Joker"] || 0) + 1;
+    visitHand: (context) => {
+      context.mult = context.jokers["Green Joker"]++;
     },
   },
   "Ride The Bus": {
     visitHand: (context, hand) => {
-      context.jokers["Ride The Bus"] = (context.jokers["Ride The Bus"] || 0) + 1;
+      context.jokers["Ride The Bus"] =
+        (context.jokers["Ride The Bus"] || 0) + 1;
     },
   },
 
   // Scaling chips jokers
-  "Runner": {
+  Runner: {
     visitHand: (context, hand) => {
-      if (hand.cards.length >= 5) context.chips += 20 * hand.cards.length;
+      if (HAND_MATCHERS["straight"](hand)) context.jokers["Runner"] += 15;
+      context.chips += context.jokers["Runner"];
     },
   },
   "Square Joker": {
     visitHand: (context, hand) => {
-      if (hand.cards.length >= 4) context.chips += 15 * hand.cards.length;
+      if (hand.cards.length === 4) context.jokers["Square Joker"] += 4;
+      context.chips += context.jokers["Square Joker"];
     },
   },
 
   // Negative scaling jokers
   "Blue Joker": {
     visitHand: (context, hand) => {
-      context.mult -= hand.cards.length;
+      context.chips += context.deckSize;
     },
   },
   "Ice Cream": {
     visitHand: (context, hand) => {
-      context.chips -= 10 * hand.cards.length;
+      context.chips += context.jokers.IceCream;
+      context.jokers.IceCream -= 5;
     },
   },
-  "Popcorn": {
+  Popcorn: {
     visitHand: (context, hand) => {
-      context.chips -= 5 * hand.cards.length;
+      context.mult += context.jokers.Popcorn;
     },
   },
 
@@ -459,12 +478,12 @@ export const JOKER_SCORING: Record<JokerName, JokerVisitor> = {
   },
   "Half Joker": {
     visitHand: (context, hand) => {
-      if (hand.cards.length < 3) context.mult += 20;
+      if (hand.cards.length <= 3) context.mult += 20;
     },
   },
 
   // Per card based jokers
-  "Scholar": {
+  Scholar: {
     visitCard: (context, card) => {
       if (card.rank === "A") {
         context.chips += 20;
@@ -496,14 +515,28 @@ export const JOKER_SCORING: Record<JokerName, JokerVisitor> = {
   },
   "Even Steven": {
     visitCard: (context, card) => {
-      const order = rankToOrder(card.rank);
-      if (order % 2 === 0) context.mult += 4;
+      switch (card.rank) {
+        case "2":
+        case "4":
+        case "6":
+        case "8":
+        case "T":
+          context.mult += 4;
+          return;
+      }
     },
   },
   "Odd Todd": {
     visitCard: (context, card) => {
-      const order = rankToOrder(card.rank);
-      if (order % 2 === 1) context.chips += 31;
+      switch (card.rank) {
+        case "A":
+        case "3":
+        case "5":
+        case "7":
+        case "9":
+          context.chips += 31;
+          return;
+      }
     },
   },
   "Greedy Joker": {
@@ -528,9 +561,15 @@ export const JOKER_SCORING: Record<JokerName, JokerVisitor> = {
   },
 
   // Misc jokers that affect card behavior rather than scoring
-  "Hanging Chad": {},
-  "Photograph": {},
-  "Misprint": {},
-  "Hanging Fist": {},
-  "Splash": {},
+  Photograph: {
+    visitCard: (context, card) => {
+      if (
+        !context.jokers.Photograph &&
+        (card.rank === "K" || card.rank === "J" || card.rank === "Q")
+      ) {
+        context.jokers.Photograph = true;
+        context.mult *= 2;
+      }
+    },
+  },
 };
