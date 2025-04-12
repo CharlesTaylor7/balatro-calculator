@@ -9,6 +9,18 @@ import { groupBy, maxBy, range } from "lodash";
 // TYPES
 type Score = { chips: number; mult: number };
 type Scored = Score & { name: HandName | null };
+
+type ScoringContext = Score & {
+  jokers: JokerContext;
+  // levels
+  planets: Record<HandName, number>;
+};
+
+type JokerVisitor = {
+  visitCard?: (context: ScoringContext, card: Card) => void;
+  visitHand?: (context: ScoringContext, hand: HandDetails) => void;
+};
+
 export type Joker = {
   // name is nullable, because plenty of jokers either:
   // have flat scoring: e.x. Jimbo, Gros Michel, etc.
@@ -31,10 +43,10 @@ export type Hand = {
 
 export type HandName = (typeof HANDS)[number];
 export type JokerName = (typeof JOKERS)[number];
-type HandDetails = {
+type HandDetails = Readonly<{
   groups: { rank: Rank; cards: Card[] }[];
   cards: Card[];
-};
+}>;
 type Nullish = null | undefined;
 type HandMatcher = (hand: HandDetails) => Card[] | Nullish;
 
@@ -43,7 +55,7 @@ export type Suit = "C" | "D" | "H" | "S";
 // W means wild
 export type ExtendedSuit = Suit | "W" | Nullish;
 
-type Card = {
+type Card = Readonly<{
   // order the cards in the hand will score
   order: number;
   rank: Rank;
@@ -52,7 +64,17 @@ type Card = {
   chips: number;
   mult: number;
   polychrome: boolean;
+}>;
+
+type JokerContext = {
+  "Green Joker": number;
+  "Ride The Bus": number;
+  Supernova: Record<HandName, number>;
 };
+
+function __assertSubType(item: keyof JokerContext): JokerName {
+  return item;
+}
 
 // FUNCTIONS
 // ts-nocheck
@@ -335,3 +357,57 @@ export const JOKERS = [
   "Hanging Fist",
   "Splash",
 ];
+export const JOKER_SCORING: Record<JokerName, JokerVisitor> = {
+  "Sly Joker": {
+    visitHand: (context, hand) => {
+      if (HAND_MATCHERS.pair(hand)) context.chips += 50;
+    },
+  },
+
+  "Jolly Joker": {
+    visitHand: (context, hand) => {
+      if (HAND_MATCHERS.pair(hand)) context.mult += 8;
+    },
+  },
+
+  "Clever Joker": {
+    visitHand: (context, hand) => {
+      if (HAND_MATCHERS["two-pair"](hand)) context.chips += 80;
+    },
+  },
+
+  "Mad Joker": {
+    visitHand: (context, hand) => {
+      if (HAND_MATCHERS["two-pair"](hand)) context.mult += 10;
+    },
+  },
+
+  "Wily Joker": {
+    visitHand: (context, hand) => {
+      if (HAND_MATCHERS["two-pair"](hand)) context.mult += 10;
+    },
+  },
+
+  "Zany Joker": {
+    visitHand: (context, hand) => {
+      if (HAND_MATCHERS["two-pair"](hand)) context.mult += 10;
+    },
+  },
+  "Crafty Joker": {
+    visitHand: (context, hand) => {
+      if (HAND_MATCHERS["two-pair"](hand)) context.mult += 10;
+    },
+  },
+
+  "Droll Joker": {
+    visitHand: (context, hand) => {
+      if (HAND_MATCHERS["two-pair"](hand)) context.mult += 10;
+    },
+  },
+
+  "Droll Joker": {
+    visitHand: (context, hand) => {
+      if (HAND_MATCHERS["two-pair"](hand)) context.mult += 10;
+    },
+  },
+};
