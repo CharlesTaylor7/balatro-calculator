@@ -3,32 +3,33 @@ import { useAppStore } from "./store";
 export function Rounds() {
   const { hands, setHand } = useAppStore();
   return (
-    <table>
+    <table className="table table-info table-striped">
       <thead>
         <tr>
-          <td>#</td>
-          <td>Hand</td>
-          <td>Chips</td>
-          <td>Mult</td>
-          <td>Score</td>
-          <td>Cumulative</td>
-          <td>Type</td>
+          <th scope="col">#</th>
+          <th scope="col">Hand</th>
+          <th scope="col">Chips</th>
+          <th scope="col">Mult</th>
+          <th scope="col">Score</th>
+          <th scope="col">Cumulative</th>
+          <th scope="col">Type</th>
         </tr>
       </thead>
       <tbody>
         {hands().map((hand, i) => (
           <tr key={i} className="text-nowrap">
-            <td>{i + 1}</td>
+            <th>{i + 1}</th>
             <td>
               <input
+                className="form-control form-control-sm"
                 value={hand.cards}
                 onChange={(e) => setHand(i, e.target.value)}
               />
             </td>
-            <td>{hand.chips}</td>
-            <td>{hand.mult}</td>
-            <td>{hand.score}</td>
-            <td>{hand.cumulative}</td>
+            <td className="text-end">{hand.chips}</td>
+            <td className="text-end">{hand.mult}</td>
+            <td className="text-end">{hand.score}</td>
+            <td className="text-end">{hand.cumulative}</td>
             <td>{hand.name}</td>
           </tr>
         ))}

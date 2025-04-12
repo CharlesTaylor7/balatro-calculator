@@ -7,8 +7,18 @@ import { groupBy, maxBy, range } from "lodash";
 //
 
 // TYPES
-type Score = { name: HandName | null; chips: number; mult: number };
-export type Joker = { name: string; id: string };
+type Score = { chips: number; mult: number };
+type Scored = Score & { name: HandName | null };
+export type Joker = {
+  // name is nullable, because plenty of jokers either:
+  // have flat scoring: e.x. Jimbo, Gros Michel, etc.
+  // have no scoring but have an edition that makes them score
+  name?: JokerName;
+  id: string;
+  chips: number;
+  mult: number;
+  polychrome: boolean;
+};
 export type JokerId = Joker["id"];
 export type Hand = {
   cards: string;
@@ -19,7 +29,8 @@ export type Hand = {
   name: HandName | null;
 };
 
-type HandName = (typeof HANDS)[number];
+export type HandName = (typeof HANDS)[number];
+export type JokerName = (typeof JOKERS)[number];
 type HandDetails = {
   groups: { rank: Rank; cards: Card[] }[];
   cards: Card[];
@@ -27,9 +38,10 @@ type HandDetails = {
 type Nullish = null | undefined;
 type HandMatcher = (hand: HandDetails) => Card[] | Nullish;
 
-type Rank = (typeof RANKS)[number];
-type Suit = "clubs" | "diamonds" | "hearts" | "spades";
-type ExtendedSuit = Suit | "wild" | "unknown";
+export type Rank = (typeof RANKS)[number];
+export type Suit = "C" | "D" | "H" | "S";
+// W means wild
+export type ExtendedSuit = Suit | "W" | Nullish;
 
 type Card = {
   // order the cards in the hand will score
@@ -44,7 +56,7 @@ type Card = {
 
 // FUNCTIONS
 // ts-nocheck
-function score(hand: string, _jokers: Joker[]): Score {
+function score(hand: string, jokers: Joker[]): Scored {
   const cards = parseHand(hand);
   //  nothing matches an empty hand
   if (cards.length === 0) return { name: null, chips: 0, mult: 0 };
@@ -55,16 +67,21 @@ function score(hand: string, _jokers: Joker[]): Score {
   }));
 
   for (const handName of HANDS) {
-    const scoring = HAND_MATCHERS[handName]({ cards, groups });
+    let scoring = HAND_MATCHERS[handName]({ cards, groups });
     if (scoring == null) continue;
-    const sorted = scoring.sort((a, b) => a.order - b.order);
+
+    // splash uses all the cards in the initial order
+    scoring = jokers.some((j) => j.name === "Splash")
+      ? cards
+      : scoring.toSorted((a, b) => a.order - b.order);
+    console.log("scoring", scoring);
 
     const { chips, mult } = HAND_SCORING[handName];
-    const card_chips = sorted.reduce(
+    const card_chips = scoring.reduce(
       (acc, card) => acc + rankToChips(card.rank),
       chips,
     );
-    const card_mult = sorted.reduce((acc, card) => {
+    const card_mult = scoring.reduce((acc, card) => {
       const mult = acc + card.mult;
       return card.polychrome ? mult * 1.5 : mult;
     }, mult);
@@ -143,7 +160,7 @@ export function scoreRounds(rounds: string[], jokers: Joker[]): Hand[] {
 }
 
 const CARD_REGEX =
-  /(?<rank>[2-9AKQJT])(C(?<chips>\d+))?(M(?<mult>\d+))?(?<polychrome>P)?/;
+  /(?<rank>[2-9AKQJT])(?<suit>[WCDHS])\s+(C(?<chips>\d+))?\s+(M(?<mult>\d+))?\s+(?<polychrome>[P])?/;
 
 export function parseHand(hand: string): Card[] {
   const rawCards = hand.split(",");
@@ -151,12 +168,12 @@ export function parseHand(hand: string): Card[] {
   for (let order = 0; order < rawCards.length; order++) {
     const raw = rawCards[order];
     const match = raw.match(CARD_REGEX);
-    if (!match) return cards;
-    const rank = match!.groups!["rank"] as Rank;
-    const suit = "unknown" as Suit;
-    const chips = match!.groups!["chips"];
-    const mult = match!.groups!["mult"];
-    const polychrome = match!.groups!["polychrome"] === "P";
+    if (!match?.groups) return cards;
+    const rank = match.groups["rank"] as Rank;
+    const suit = match.groups["suit"] as ExtendedSuit;
+    const chips = match.groups["chips"];
+    const mult = match.groups["mult"];
+    const polychrome = match.groups["polychrome"] != null;
     cards.push({
       order,
       rank,
@@ -272,3 +289,49 @@ const HAND_SCORING: Record<HandName, Score> = {
   "flush-five": { chips: 140, mult: 14 },
   "flush-house": { chips: 160, mult: 16 },
 };
+
+// List is intentionally not exhaustive.
+// focused on variable scoring jokers only,
+// flat chips/mult/xmult can be added separately
+const JOKERS = [
+  // scaling mult
+  "Supernova",
+  "Green Joker",
+  "Ride The Bus",
+  // scaling chips,
+  "Runner",
+  "Square Joker",
+  // negative scaling,
+  "Blue Joker",
+  "Ice Cream",
+  "Popcorn",
+  // flat hand based
+  "Sly Joker", // pair: +50 chips
+  "Jolly Joker", // pair: +8 mult
+  "Clever Joker", // two-pair: +80 chips
+  "Mad Joker", // two-pair: +10 mult
+  "Wily Joker", // three-of-a-kind: +100 chips
+  "Zany Joker", // three-of-a-kind: +12 mult
+  "Crafty Joker", // flush: +80 chips
+  "Droll Joker", // flush: +10 mult
+  "Devious Joker", // straight: +100 chips
+  "Crazy Joker", // straight: +12 mult
+  "Half Joker", // <3 cards: +20 mult
+  // per card based
+  "Scholar", // ace: +20 chips, +4 mult
+  "Walkie Talkie", // 10/4: +10 chips, +4 mult
+  "Scary Face", // face: +30 chips
+  "Smiley Joker", // face: +5 mult
+  "Even Steven", // even: +4 mult
+  "Odd Todd", // odd: +31 chips
+  "Greedy Joker", // diamond: +3 mult
+  "Lusty Joker", // heart: +3 mult
+  "Wrathful Joker", // spade: +3 mult
+  "Gluttonous Joker", // club: +3 mult
+  //misc
+  "Hanging Chad",
+  "Photograph",
+  "Misprint",
+  "Hanging Fist",
+  "Splash",
+];

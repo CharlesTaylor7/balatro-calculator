@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import type { Joker, JokerId, Hand } from "./calculator";
+import type { Joker, JokerId, Hand, JokerName } from "./calculator";
 import { scoreRounds } from "./calculator";
 
 // TODO:
@@ -13,7 +13,7 @@ export type AppState = {
   jokers: Joker[];
   setJokers: (jokers: Joker[]) => void;
   deleteJoker: (id: JokerId) => void;
-  pushJoker: (name: string) => void;
+  pushJoker: (name: JokerName | null) => void;
   // hand name or exact cards
   rounds: string[];
   hands: () => Hand[];
@@ -31,7 +31,7 @@ export const useAppStore = create<AppState>()(
         // @ts-ignore
         jokers: state.jokers.filter((joker) => joker.id !== id),
       })),
-    pushJoker: (name: string) =>
+    pushJoker: (name: JokerName | null) =>
       set((state: AppState) => ({
         jokers: [...state.jokers, { name, id: newId() }],
       })),
