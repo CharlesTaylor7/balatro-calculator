@@ -4,7 +4,10 @@ export function Rounds() {
   const { rounds, getScoredHands, setHand } = useAppStore();
   const hands = getScoredHands();
   return (
-    <table className="table table-bordered table-info table-striped">
+    <table
+      className="table table-bordered table-info table-striped"
+      style={{ width: "400px" }}
+    >
       <thead>
         <tr>
           <th scope="col">#</th>

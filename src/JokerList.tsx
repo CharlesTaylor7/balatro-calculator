@@ -1,6 +1,6 @@
 import { useId } from "react";
 import { useAppStore } from "./store";
-import { Joker, JokerName, JOKERS } from "./calculator";
+import { Joker, JOKERS } from "./calculator";
 import {
   DndContext,
   closestCenter,
@@ -54,7 +54,7 @@ export function JokerList() {
   }
 
   return (
-    <div className="col-4">
+    <div className="">
       <button
         className="btn btn-sm btn-primary nowrap"
         onClick={() => pushJoker(null)}
@@ -92,7 +92,7 @@ function JokerComponent({ joker, index }: JokerProps) {
     useSortable({ id: joker.id });
   const { deleteJoker, updateJoker } = useAppStore();
 
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
@@ -101,14 +101,20 @@ function JokerComponent({ joker, index }: JokerProps) {
   const multId = useId();
   const xmultId = useId();
 
-  console.log("joker", joker);
+  const name = joker.vars.name;
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <div className="d-flex flex-row justify-content-between">
+    <div
+      className="card"
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+    >
+      <div className="d-flex align-items-center ">
         <Select
           // @ts-ignore
-          defaultValue={joker.vars.name}
-          // @ts-ignore
+          style={{ width: "220px" }}
+          value={name && { value: name, label: name }}
           options={JOKERS.map((j) => ({ value: j, label: j }))}
           placeholder="Any Joker"
           // @ts-ignore
@@ -116,74 +122,76 @@ function JokerComponent({ joker, index }: JokerProps) {
             // @ts-ignore
             updateJoker(index, "vars", { name: option?.value });
           }}
-          // isClearable
-          // clearValue={() => updateJoker(index, "name", null)}
+          isClearable={name != null}
+          clearValue={() => updateJoker(index, "vars", { name: null })}
         />
 
         <button
-          className="btn btn-sm btn-danger"
+          className="btn btn-sm btn-danger "
+          style={{ width: "2rem", height: "2rem" }}
           onClick={() => deleteJoker(joker.id)}
         >
           x
         </button>
       </div>
+      <div
+        className="d-grid align-items-center justify-items-center"
+        style={{ gridTemplateColumns: "auto auto" }}
+      >
+        {joker.vars && "counter" in joker.vars ? (
+          <>
+            <label className="form-label d-block cursor-grab" htmlFor={chipsId}>
+              Counter
+            </label>
+            <input
+              className="form-control form-control-sm"
+              style={{ width: "3rem" }}
+              id={counterId}
+              type="number"
+              value={joker.vars.counter}
+              onChange={(e) =>
+                updateJoker(index, "vars", { counter: Number(e.target.value) })
+              }
+            />
+          </>
+        ) : null}
 
-      {joker.vars && "counter" in joker.vars ? (
-        <div className="d-flex flex-row justify-content-between">
-          <label className="form-label d-block cursor-grab" htmlFor={chipsId}>
-            Counter
-          </label>
-          <input
-            className="form-control form-control-sm"
-            id={counterId}
-            type="number"
-            value={joker.vars.counter}
-            onChange={(e) =>
-              updateJoker(index, "vars", { counter: Number(e.target.value) })
-            }
-          />
-        </div>
-      ) : null}
-      <div className="d-flex flex-row justify-content-between">
         <label className="form-label d-block cursor-grab" htmlFor={chipsId}>
           Chips
         </label>
         <input
           className="form-control form-control-sm"
+          style={{ width: "3rem" }}
           id={chipsId}
           type="number"
           defaultValue={joker.chips}
           onChange={(e) => updateJoker(index, "chips", Number(e.target.value))}
         />
-      </div>
 
-      <div className="d-flex flex-row justify-content-between">
         <label className="form-label d-block cursor-grab" htmlFor={multId}>
           Mult
         </label>
         <input
           className="form-control form-control-sm"
+          style={{ width: "3rem" }}
           id={multId}
           type="number"
           defaultValue={joker.mult}
           onChange={(e) => updateJoker(index, "mult", Number(e.target.value))}
         />
 
-        <div className="d-flex flex-row justify-content-between">
-          <label htmlFor={xmultId} className="form-check-label d-block">
-            xMult
-          </label>
+        <label htmlFor={xmultId} className="form-check-label d-block">
+          xMult
+        </label>
 
-          <input
-            className="form-control form-control-sm"
-            id={xmultId}
-            type="number"
-            defaultValue={joker.xmult}
-            onChange={(e) =>
-              updateJoker(index, "xmult", Number(e.target.value))
-            }
-          />
-        </div>
+        <input
+          className="form-control form-control-sm"
+          style={{ width: "3rem" }}
+          id={xmultId}
+          type="number"
+          defaultValue={joker.xmult}
+          onChange={(e) => updateJoker(index, "xmult", Number(e.target.value))}
+        />
       </div>
     </div>
   );

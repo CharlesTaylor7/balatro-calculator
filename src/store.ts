@@ -49,9 +49,12 @@ export const useAppStore = create<AppState>()(
         let updates: Partial<Joker>;
         if (key === "vars" && typeof value === "object" && "name" in value)
           updates = newJoker(value.name);
-        // @ts-ignore
-        else if (key === "vars") updates = { ...copy[index].vars, ...value };
+        else if (key === "vars")
+          // @ts-ignore
+          updates = { vars: { ...copy[index].vars, ...value } };
         else updates = { [key]: value };
+
+        console.log("updates", updates);
 
         // @ts-ignore
         Object.assign(copy[index], updates);
