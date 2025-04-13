@@ -1,6 +1,7 @@
 ## Goal
 - Make it easy to preview scores 
 - Win more gold stake runs.
+- Mobile friendly
 
 ## Use cases
 - Experiment with exotic builds even when not playing
