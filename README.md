@@ -1,6 +1,6 @@
 ## Goal
-Make it easy to preview scores 
-Win more gold stake runs.
+- Make it easy to preview scores 
+- Win more gold stake runs.
 
 ## Use cases
 - Experiment with exotic builds even when not playing
@@ -14,9 +14,9 @@ Win more gold stake runs.
 
 ## Features planned
 Shooting for the moon here. Right now the functionality is limited to a handful of simple jokers.
-The goal is to support most scoring jokers and to even support calculating probability distributions.
 
-Misprint, Bloodstone, etc. introduce probabilistic scoring.
+- Support all deterministic scoring jokers
+- Support probability distributions: Misprint, Bloodstone, etc.
 
 ## Non-Goals
 - Not intended to be a full balatro sim. Buy the game!
@@ -26,14 +26,17 @@ Misprint, Bloodstone, etc. introduce probabilistic scoring.
 
 ## Development
 Pretty straightforward. Using yarn v4. 
-Get started by running `yarn & yarn dev`
-Other scripts listed in the `package.json`
+
+Get started by running `yarn & yarn dev`.
+
+Other scripts listed in [package.json](./package.json#L6-L11)
 
 ## How to use
 
 Hands are parsed from a shorthand syntax.
-`TC` = Ten of Clubs
-`TC C5 M10 X2` = Ten of clubs with +5 chips +10 mult x2 mult. (i.e. Holographic Glass Ten of Clubs upgraded once with "Hiker")
+- `TC` = Ten of Clubs
+- `TC C5 M10 X2` = Ten of clubs with +5 chips +10 mult x2 mult. (i.e. Holographic Glass Ten of Clubs upgraded once with "Hiker")
+
 cards are separated by ","
 
 The regex syntax for parsing cards is:
