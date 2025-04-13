@@ -1,54 +1,29 @@
-# React + TypeScript + Vite
+## Goal
+Make it easy to preview scores 
+Win more gold stake runs.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Use cases
+- Experiment with exotic builds even when not playing
+- Play Balatro with it open
 
-Currently, two official plugins are available:
+## Tech Stack
+- React
+- Typescript
+- Zustand
+- Lodash
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features planned
+Shooting for the moon here. Right now the functionality is limited to a handful of simple jokers.
+The goal is to support most scoring jokers and to even support calculating probability distributions.
 
-## Expanding the ESLint configuration
+Misprint, Bloodstone, etc. introduce probabilistic scoring.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Non-Goals
+- Not intended to be a full balatro sim. Buy the game!
+- Handling all joker interactions outside of a round score.
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+## Development
+Pretty straightforward. Using yarn v4. 
+Get started by running `yarn & yarn dev`
+Other scripts listed in the `package.json`
