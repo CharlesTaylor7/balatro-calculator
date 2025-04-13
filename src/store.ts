@@ -8,12 +8,15 @@ import { scoreRounds, newJoker } from "./calculator";
 // - plasma has a different scoring and different blind amounts
 // - stake, green stake & purple stake increase the blind amounts
 //
-
 export type AppState = {
   jokers: Joker[];
   setJokers: (jokers: Joker[]) => void;
   deleteJoker: (id: JokerId) => void;
-  updateJoker: (index: number, joker: Partial<Joker>) => void;
+  updateJoker<K extends keyof Joker>(
+    index: number,
+    key: K,
+    value: Partial<Joker[K]>,
+  ): void;
   pushJoker: (name: JokerName | null) => void;
   // hand name or exact cards
   rounds: string[];
@@ -22,6 +25,7 @@ export type AppState = {
 };
 
 export const useAppStore = create<AppState>()(
+  // @ts-ignore
   persist(
     // @ts-ignore
     (set: any, get: any) => ({
@@ -43,11 +47,15 @@ export const useAppStore = create<AppState>()(
         const { jokers } = get();
         const copy = Array.from(jokers);
         let updates: Partial<Joker>;
-        if (key === "name") updates = newJoker(value as Joker<K>);
+        if (key === "vars" && typeof value === "object" && "name" in value)
+          updates = newJoker(value.name);
+        // @ts-ignore
+        else if (key === "vars") updates = { ...copy[index].vars, ...value };
         else updates = { [key]: value };
 
         // @ts-ignore
         Object.assign(copy[index], updates);
+        console.log("jokers", copy);
         set({ jokers: copy });
       },
       rounds: makeArray(4, () => ""),

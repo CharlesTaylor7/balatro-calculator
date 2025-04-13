@@ -24,52 +24,38 @@ type ScoringContext = Score & {
   pareidolia: boolean;
 };
 
-type AnyJoker<Name = JokerName | null> = {
+export type Joker = {
   // name is nullable, because plenty of jokers either:
   // have flat scoring: e.x. Jimbo, Gros Michel, etc.
   // have no scoring but have an edition that makes them score
-  name: Name;
   id: string;
   chips: number;
   mult: number;
   xmult: number;
+  vars: JokerUnion;
 };
+export type JokerId = Joker["id"];
 
-type JokerWithContext =
-  | { name: "Green Joker"; counter: number }
-  | { name: "Ride The Bus"; counter: number }
-  | { name: "Obelisk"; counter: number }
-  | { name: "Runner"; counter: number }
-  | { name: "Square Joker"; counter: number }
-  | { name: "Ice Cream"; counter: number }
+type JokerVariables =
+  | ({ name: "Green Joker" } & JokerCounter)
+  | ({ name: "Ride The Bus" } & JokerCounter)
+  | ({ name: "Obelisk" } & JokerCounter)
+  | ({ name: "Runner" } & JokerCounter)
+  | ({ name: "Square Joker" } & JokerCounter)
+  | ({ name: "Ice Cream" } & JokerCounter)
   | { name: "Photograph"; photograph: boolean };
 
-type JokerEnum =
-  | JokerWithContext
-  | { name: Exclude<JokerName | null, JokerWithContext["name"]> };
+type JokerCounter = { counter: number; display: () => string };
 
-({
-  name: "Ice Cream",
-  mult: 0,
-  xmult: 1,
-  chips: 0,
-  id: "",
-  counter: 0,
-}) satisfies Joker;
+type JokerUnion = JokerVariables | { name: JokerNameWithoutVars };
+type JokerNameWithoutVars = Exclude<JokerName | null, JokerVariables["name"]>;
 
-export type Joker<Name = JokerName | null> = AnyJoker<Name> & JokerEnum;
-
-function __assertJokerContextHasJokerName(
-  item: JokerWithContext["name"],
-): AnyJoker["name"] {
+function __assertJokerDetailsHasJokerName(
+  item: JokerVariables["name"],
+): JokerName {
   return item;
 }
 
-function __assertJokerHasJokerName(item: Joker["name"]): AnyJoker["name"] {
-  return item;
-}
-
-export type JokerId = Joker["id"];
 export type Hand = {
   chips: number;
   mult: number;
@@ -105,33 +91,55 @@ type Card = Readonly<{
 }>;
 
 // FUNCTIONS
-export function newJoker(joker: string | null): Joker {
-  const anyJoker: AnyJoker<typeof joker> = {
-    name: joker,
+export function newJoker(name: string | null): Joker {
+  const details = { name } as JokerUnion;
+  switch (details.name) {
+    case "Ice Cream":
+      details.counter = 20;
+      details.display = () => `+${details.counter} chips`;
+      break;
+
+    case "Photograph":
+      details.photograph = false;
+      break;
+
+    case "Green Joker":
+      details.counter = 0;
+      details.display = () => `+${details.counter} mult`;
+      break;
+
+    case "Obelisk":
+      details.counter = 0;
+      details.display = () => `x${0.2 * details.counter} mult`;
+      break;
+
+    case "Ride The Bus":
+      details.counter = 0;
+      details.display = () => `+${details.counter} mult`;
+      break;
+
+    case "Square Joker":
+      details.counter = 0;
+      details.display = () => `+${4 * details.counter} chips`;
+      break;
+
+    case "Runner":
+      details.counter = 0;
+      details.display = () => `+${15 * details.counter} chips`;
+      break;
+
+    default:
+      details.name satisfies JokerNameWithoutVars;
+      break;
+  }
+
+  return {
     id: newId(),
     chips: 0,
     mult: 0,
     xmult: 1,
+    vars: details,
   };
-  switch (joker) {
-    case "Ice Cream": {
-      const joker = anyJoker as Joker<"Ice Cream">;
-      joker.counter = 20;
-      return joker;
-    }
-    case "Photograph": {
-      const joker = anyJoker as Joker<"Photograph">;
-      joker.photograph = false;
-      return joker;
-    }
-
-    case "Green Joker": {
-      const joker = anyJoker as Joker<"Green Joker">;
-      joker.counter = 0;
-      return joker;
-    }
-  }
-  return anyJoker as Joker;
 }
 
 function newId() {
@@ -163,7 +171,7 @@ function score(hand: string, jokers: Joker[]): Scored | null {
     if (scoring == null) continue;
 
     // splash uses all the cards in the initial order
-    scoring = jokers.some((j) => j.name === "Splash")
+    scoring = jokers.some((j) => j.vars.name === "Splash")
       ? cards
       : scoring.toSorted((a, b) => a.order - b.order);
     console.log("scoring", scoring);
@@ -173,7 +181,7 @@ function score(hand: string, jokers: Joker[]): Scored | null {
       mult: 0,
       planets: newPlanets(),
       hands: newHands(),
-      pareidolia: jokers.some((j) => j.name === "Pareidolia"),
+      pareidolia: jokers.some((j) => j.vars.name === "Pareidolia"),
     };
     scoreHand(scoringContext, handName);
     for (const card of scoring) {
@@ -303,7 +311,7 @@ function isFaceCard(rank: Rank, context: ScoringContext) {
   return rank === "K" || rank === "Q" || rank === "J" || context.pareidolia;
 }
 function visitCard(context: ScoringContext, joker: Joker, card: Card) {
-  switch (joker.name) {
+  switch (joker.vars.name) {
     case "Scholar":
       if (card.rank === "A") {
         context.chips += 20;
@@ -363,10 +371,10 @@ function visitCard(context: ScoringContext, joker: Joker, card: Card) {
 
     case "Photograph":
       if (
-        !joker.photograph &&
+        !joker.vars.photograph &&
         (card.rank === "K" || card.rank === "J" || card.rank === "Q")
       ) {
-        joker.photograph = true;
+        joker.vars.photograph = true;
         context.mult *= 2;
       }
       return;
@@ -378,13 +386,13 @@ function visitHand(
   joker: Joker,
   hand: HandNameAndDetails,
 ) {
-  switch (joker.name) {
+  switch (joker.vars.name) {
     case "Green Joker":
-      context.mult += joker.counter++;
+      context.mult += joker.vars.counter++;
       return;
 
     case "Ride The Bus":
-      context.mult += joker.counter++;
+      context.mult += joker.vars.counter++;
       return;
 
     case "Supernova":
@@ -397,22 +405,22 @@ function visitHand(
         .filter((pair) => pair[1] === max)
         .map((pair) => pair[0]);
       if (mostPlayed.includes(hand.name)) {
-        joker.counter = 0;
+        joker.vars.counter = 0;
       } else {
-        joker.counter++;
+        joker.vars.counter++;
       }
-      context.mult *= joker.counter * 0.2;
+      context.mult *= joker.vars.counter * 0.2;
       return;
     }
 
     case "Square Joker":
-      if (hand.cards.length === 4) joker.counter++;
-      context.chips += joker.counter * 4;
+      if (hand.cards.length === 4) joker.vars.counter++;
+      context.chips += joker.vars.counter * 4;
       return;
 
     case "Ice Cream":
-      joker.counter--;
-      context.chips += joker.counter * 5;
+      joker.vars.counter--;
+      context.chips += joker.vars.counter * 5;
       return;
 
     case "Sly Joker":
