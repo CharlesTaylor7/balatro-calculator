@@ -1,7 +1,8 @@
 import { useAppStore } from "./store";
 
 export function Rounds() {
-  const { hands, setHand } = useAppStore();
+  const { getScoredHands, setHand } = useAppStore();
+  const hands = getScoredHands();
   return (
     <table className="table table-info table-striped">
       <thead>
@@ -16,21 +17,21 @@ export function Rounds() {
         </tr>
       </thead>
       <tbody>
-        {hands().map((hand, i) => (
+        {hands.map((hand, i) => (
           <tr key={i} className="text-nowrap">
             <th>{i + 1}</th>
             <td>
               <input
                 className="form-control form-control-sm"
-                value={hand.cards}
+                value={hand?.cards}
                 onChange={(e) => setHand(i, e.target.value)}
               />
             </td>
-            <td className="text-end">{hand.chips}</td>
-            <td className="text-end">{hand.mult}</td>
-            <td className="text-end">{hand.score}</td>
-            <td className="text-end">{hand.cumulative}</td>
-            <td>{hand.name}</td>
+            <td className="text-end">{hand?.chips}</td>
+            <td className="text-end">{hand?.mult}</td>
+            <td className="text-end">{hand?.score}</td>
+            <td className="text-end">{hand?.cumulative}</td>
+            <td>{hand?.name}</td>
           </tr>
         ))}
       </tbody>

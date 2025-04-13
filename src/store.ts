@@ -17,7 +17,7 @@ export type AppState = {
   pushJoker: (name: JokerName | null) => void;
   // hand name or exact cards
   rounds: string[];
-  hands: () => Hand[];
+  getScoredHands: () => Hand[];
   setHand: (index: number, hand: string) => Hand[];
 };
 
@@ -46,9 +46,8 @@ export const useAppStore = create<AppState>()(
       Object.assign(copy[index], joker);
       set({ jokers: copy });
     },
-
     rounds: makeArray(4, () => ""),
-    hands: () => {
+    getScoredHands: () => {
       const { rounds, jokers } = get();
       // console.log(rounds, jokers);
       return scoreRounds(rounds, jokers);
