@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { devtools, persist } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 import type { Joker, JokerId, Hand, JokerName } from "./calculator";
-import { scoreRounds } from "./calculator";
+import { scoreRounds, newJoker } from "./calculator";
 
 // TODO:
 // configuration:
@@ -33,10 +33,7 @@ export const useAppStore = create<AppState>()(
         })),
       pushJoker: (name: JokerName | null) =>
         set((state: AppState) => ({
-          jokers: [
-            ...state.jokers,
-            { name, id: newId(), mult: 0, chips: 0, xmult: 1 },
-          ],
+          jokers: [...state.jokers, newJoker(name)],
         })),
       updateJoker: (index: number, joker: Partial<Joker>) => {
         const { jokers } = get();
@@ -68,8 +65,6 @@ export const useAppStore = create<AppState>()(
     },
   ),
 );
-// TODO: persist data
-// { name: "balatro" },
 
 function makeArray<T>(length: number, fn: (k: number) => T) {
   return Array.from({ length }, (_, k) => fn(k));
