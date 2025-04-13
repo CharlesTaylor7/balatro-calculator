@@ -68,7 +68,6 @@ function __assertJokerHasJokerName(item: Joker["name"]): AnyJoker["name"] {
 
 export type JokerId = Joker["id"];
 export type Hand = {
-  cards: string;
   chips: number;
   mult: number;
   score: number;
@@ -106,6 +105,7 @@ type Card = Readonly<{
 // ts-nocheck
 function score(hand: string, jokers: Joker[]): Scored | null {
   const cards = parseHand(hand);
+  console.log("cards", cards);
 
   //  nothing matches an empty hand
   if (cards.length === 0) return null;
@@ -132,12 +132,13 @@ function score(hand: string, jokers: Joker[]): Scored | null {
       pareidolia: jokers.some((j) => j.name === "Pareidolia"),
     };
     for (const card of scoring) {
-      scoringContext.chips += card.chips;
+      scoringContext.chips += card.chips + rankToChips(card.rank);
       scoringContext.mult += card.mult;
       scoringContext.mult *= card.polychrome ? 1.5 : 1.0;
       for (const joker of jokers) {
         visitCard(scoringContext, joker, card);
       }
+      console.log("scored", card, scoringContext);
     }
     for (const joker of jokers) {
       scoringContext.chips += joker.chips;
@@ -210,6 +211,7 @@ export function scoreRounds(
   let cumulative = 0;
   for (const hand of rounds) {
     const scored = score(hand, jokers);
+
     if (scored == null) {
       hands.push(null);
     } else {
@@ -227,7 +229,7 @@ export function scoreRounds(
 }
 
 const CARD_REGEX =
-  /(?<rank>[2-9AKQJT])(?<suit>[WCDHS])\s+(C(?<chips>\d+))?\s+(M(?<mult>\d+))?\s+(?<polychrome>[P])?/;
+  /(?<rank>[2-9AKQJT])(?<suit>[WCDHS])?\s*(C(?<chips>\d+))?\s*(M(?<mult>\d+))?\s*(?<polychrome>[P])?/;
 
 export function parseHand(hand: string): Card[] {
   const rawCards = hand.split(",");

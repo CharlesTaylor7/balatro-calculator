@@ -1,7 +1,7 @@
 import { useAppStore } from "./store";
 
 export function Rounds() {
-  const { getScoredHands, setHand } = useAppStore();
+  const { rounds, getScoredHands, setHand } = useAppStore();
   const hands = getScoredHands();
   return (
     <table className="table table-info table-striped">
@@ -17,23 +17,26 @@ export function Rounds() {
         </tr>
       </thead>
       <tbody>
-        {hands.map((hand, i) => (
-          <tr key={i} className="text-nowrap">
-            <th>{i + 1}</th>
-            <td>
-              <input
-                className="form-control form-control-sm"
-                value={hand?.cards}
-                onChange={(e) => setHand(i, e.target.value)}
-              />
-            </td>
-            <td className="text-end">{hand?.chips}</td>
-            <td className="text-end">{hand?.mult}</td>
-            <td className="text-end">{hand?.score}</td>
-            <td className="text-end">{hand?.cumulative}</td>
-            <td>{hand?.name}</td>
-          </tr>
-        ))}
+        {rounds.map((raw, i) => {
+          const hand = hands[i];
+          return (
+            <tr key={i} className="text-nowrap">
+              <th>{i + 1}</th>
+              <td>
+                <input
+                  className="form-control form-control-sm"
+                  value={raw}
+                  onChange={(e) => setHand(i, e.target.value)}
+                />
+              </td>
+              <td className="text-end">{hand?.chips}</td>
+              <td className="text-end">{hand?.mult}</td>
+              <td className="text-end">{hand?.score}</td>
+              <td className="text-end">{hand?.cumulative}</td>
+              <td>{hand?.name}</td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );

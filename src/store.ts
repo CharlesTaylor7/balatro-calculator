@@ -49,13 +49,14 @@ export const useAppStore = create<AppState>()(
     rounds: makeArray(4, () => ""),
     getScoredHands: () => {
       const { rounds, jokers } = get();
-      // console.log(rounds, jokers);
       return scoreRounds(rounds, jokers);
     },
     setHand: (index, hand) =>
       set((state: AppState) => {
         const rounds = Array.from(state.rounds);
+        console.log("hand", hand);
         rounds.splice(index, 1, hand);
+        console.log("rounds", rounds);
         return { rounds };
       }),
   })),
