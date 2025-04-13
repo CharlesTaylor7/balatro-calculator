@@ -17,49 +17,56 @@ export type AppState = {
   pushJoker: (name: JokerName | null) => void;
   // hand name or exact cards
   rounds: string[];
-  getScoredHands: () => Hand[];
+  getScoredHands: () => (Hand | null)[];
   setHand: (index: number, hand: string) => Hand[];
 };
 
 export const useAppStore = create<AppState>()(
   // @ts-ignore
-  devtools((set: any, get: any) => ({
-    jokers: [],
-    setJokers: (jokers: Joker[]) => set({ jokers }),
-    deleteJoker: (id) =>
-      // @ts-ignore
-      set((state) => ({
+  persist(
+    (set: any, get: any) => ({
+      jokers: [],
+      setJokers: (jokers: Joker[]) => set({ jokers }),
+      deleteJoker: (id) =>
+        set((state: AppState) => ({
+          jokers: state.jokers.filter((joker) => joker.id !== id),
+        })),
+      pushJoker: (name: JokerName | null) =>
+        set((state: AppState) => ({
+          jokers: [
+            ...state.jokers,
+            { name, id: newId(), mult: 0, chips: 0, xmult: 1 },
+          ],
+        })),
+      updateJoker: (index: number, joker: Partial<Joker>) => {
+        const { jokers } = get();
+        const copy = Array.from(jokers);
         // @ts-ignore
-        jokers: state.jokers.filter((joker) => joker.id !== id),
-      })),
-    pushJoker: (name: JokerName | null) =>
-      set((state: AppState) => ({
-        jokers: [
-          ...state.jokers,
-          { name, id: newId(), mult: 0, chips: 0, xmult: 1 },
-        ],
-      })),
-    updateJoker: (index: number, joker: Partial<Joker>) => {
-      const { jokers } = get();
-      const copy = Array.from(jokers);
-      // @ts-ignore
-      Object.assign(copy[index], joker);
-      set({ jokers: copy });
+        Object.assign(copy[index], joker);
+        set({ jokers: copy });
+      },
+      rounds: makeArray(4, () => ""),
+      getScoredHands: () => {
+        const { rounds, jokers } = get();
+        return scoreRounds(rounds, jokers);
+      },
+      setHand: (index, hand) =>
+        set((state: AppState) => {
+          const rounds = Array.from(state.rounds);
+          console.log("hand", hand);
+          rounds.splice(index, 1, hand);
+          console.log("rounds", rounds);
+          return { rounds };
+        }),
+    }),
+    {
+      name: "balatro",
+      partialize: (state: AppState) =>
+        Object.fromEntries(
+          Object.entries(state).filter((pair) => typeof pair[1] !== "function"),
+        ),
     },
-    rounds: makeArray(4, () => ""),
-    getScoredHands: () => {
-      const { rounds, jokers } = get();
-      return scoreRounds(rounds, jokers);
-    },
-    setHand: (index, hand) =>
-      set((state: AppState) => {
-        const rounds = Array.from(state.rounds);
-        console.log("hand", hand);
-        rounds.splice(index, 1, hand);
-        console.log("rounds", rounds);
-        return { rounds };
-      }),
-  })),
+  ),
 );
 // TODO: persist data
 // { name: "balatro" },
