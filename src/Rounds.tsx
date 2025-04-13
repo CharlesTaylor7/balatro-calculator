@@ -4,16 +4,26 @@ export function Rounds() {
   const { rounds, getScoredHands, setHand } = useAppStore();
   const hands = getScoredHands();
   return (
-    <table className="table table-info table-striped">
+    <table className="table table-bordered table-info table-striped">
       <thead>
         <tr>
           <th scope="col">#</th>
           <th scope="col">Hand</th>
-          <th scope="col">Chips</th>
-          <th scope="col">Mult</th>
-          <th scope="col">Score</th>
-          <th scope="col">Cumulative</th>
-          <th scope="col">Type</th>
+          <th scope="col" className="text-center">
+            Chips
+          </th>
+          <th scope="col" className="text-center">
+            Mult
+          </th>
+          <th scope="col" className="text-center">
+            Score
+          </th>
+          <th scope="col" className="text-center">
+            Cumulative
+          </th>
+          <th scope="col" className="text-center">
+            Type
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -22,7 +32,7 @@ export function Rounds() {
           return (
             <tr key={i} className="text-nowrap">
               <th>{i + 1}</th>
-              <td>
+              <td style={{ width: "100px" }}>
                 <input
                   className="form-control form-control-sm"
                   value={raw}

@@ -38,7 +38,7 @@ type AnyJoker = {
   id: string;
   chips: number;
   mult: number;
-  polychrome: boolean;
+  xmult: number;
 };
 
 type JokerWithContext =
@@ -98,7 +98,7 @@ type Card = Readonly<{
 
   chips: number;
   mult: number;
-  polychrome: boolean;
+  xmult: number;
 }>;
 
 // FUNCTIONS
@@ -126,24 +126,26 @@ function score(hand: string, jokers: Joker[]): Scored | null {
     console.log("scoring", scoring);
 
     const scoringContext: ScoringContext = {
-      ...HAND_SCORING[handName],
+      chips: 0,
+      mult: 0,
       planets: newPlanets(),
       hands: newHands(),
       pareidolia: jokers.some((j) => j.name === "Pareidolia"),
     };
+    scoreHand(scoringContext, handName);
     for (const card of scoring) {
       scoringContext.chips += card.chips + rankToChips(card.rank);
       scoringContext.mult += card.mult;
-      scoringContext.mult *= card.polychrome ? 1.5 : 1.0;
+      scoringContext.mult *= card.xmult;
       for (const joker of jokers) {
         visitCard(scoringContext, joker, card);
       }
-      console.log("scored", card, scoringContext);
     }
+    scoringContext.hands[handName]++;
     for (const joker of jokers) {
       scoringContext.chips += joker.chips;
       scoringContext.mult += joker.mult;
-      scoringContext.mult *= joker.polychrome ? 1.5 : 1.0;
+      scoringContext.mult *= joker.xmult;
       visitHand(scoringContext, joker, { name: handName, cards, groups });
     }
 
@@ -228,7 +230,7 @@ export function scoreRounds(
 }
 
 const CARD_REGEX =
-  /(?<rank>[2-9AKQJT])(?<suit>[WCDHS])?\s*(C(?<chips>\d+))?\s*(M(?<mult>\d+))?\s*(?<polychrome>[P])?/;
+  /(?<rank>[2-9AKQJT])(?<suit>[WCDHS])?\s*(C(?<chips>\d+))?\s*(M(?<mult>\d+))?\s*(X(?<xmult>[\d.]+))?/;
 
 export function parseHand(hand: string): Card[] {
   const rawCards = hand.split(",");
@@ -241,14 +243,14 @@ export function parseHand(hand: string): Card[] {
     const suit = match.groups["suit"] as ExtendedSuit;
     const chips = match.groups["chips"];
     const mult = match.groups["mult"];
-    const polychrome = match.groups["polychrome"] != null;
+    const xmult = match.groups["xmult"];
     cards.push({
       order,
       rank,
       suit,
       chips: chips != null ? Number(chips) : 0,
       mult: mult != null ? Number(mult) : 0,
-      polychrome,
+      xmult: xmult != null ? Number(xmult) : 1,
     });
   }
   return cards;
@@ -416,6 +418,13 @@ function visitHand(
   }
 }
 
+function scoreHand(context: ScoringContext, hand: HandName) {
+  context.chips +=
+    HAND_SCORING[hand].chips + context.planets[hand] * HAND_SCALING[hand].chips;
+  context.mult +=
+    HAND_SCORING[hand].mult + context.planets[hand] * HAND_SCALING[hand].mult;
+}
+
 // CONSTANTS
 /* eslint-disable-next-line */
 const RANKS = [
@@ -510,6 +519,21 @@ const HAND_MATCHERS: Record<HandName, HandMatcher> = {
     HAND_MATCHERS.flush(hand) && HAND_MATCHERS["full-house"](hand),
 };
 
+const HAND_SCALING: Record<HandName, Score> = {
+  "high-card": { chips: 10, mult: 1 },
+  pair: { chips: 15, mult: 1 },
+  "two-pair": { chips: 20, mult: 1 },
+  "three-of-a-kind": { chips: 20, mult: 2 },
+  straight: { chips: 30, mult: 3 },
+  flush: { chips: 15, mult: 2 },
+  "full-house": { chips: 25, mult: 2 },
+  "four-of-a-kind": { chips: 30, mult: 3 },
+  "straight-flush": { chips: 40, mult: 4 },
+  "five-of-a-kind": { chips: 35, mult: 3 },
+  "flush-house": { chips: 40, mult: 4 },
+  "flush-five": { chips: 50, mult: 3 },
+};
+
 const HAND_SCORING: Record<HandName, Score> = {
   "high-card": { chips: 5, mult: 1 },
   pair: { chips: 10, mult: 2 },
@@ -521,8 +545,8 @@ const HAND_SCORING: Record<HandName, Score> = {
   "four-of-a-kind": { chips: 60, mult: 7 },
   "straight-flush": { chips: 100, mult: 8 },
   "five-of-a-kind": { chips: 120, mult: 12 },
-  "flush-five": { chips: 140, mult: 14 },
-  "flush-house": { chips: 160, mult: 16 },
+  "flush-house": { chips: 140, mult: 14 },
+  "flush-five": { chips: 160, mult: 16 },
 };
 
 // List is intentionally not exhaustive.

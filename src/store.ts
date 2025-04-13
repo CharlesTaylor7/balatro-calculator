@@ -36,7 +36,7 @@ export const useAppStore = create<AppState>()(
       set((state: AppState) => ({
         jokers: [
           ...state.jokers,
-          { name, id: newId(), mult: 0, chips: 0, polychrome: false },
+          { name, id: newId(), mult: 0, chips: 0, xmult: 1 },
         ],
       })),
     updateJoker: (index: number, joker: Partial<Joker>) => {

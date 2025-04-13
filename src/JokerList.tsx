@@ -137,7 +137,7 @@ function JokerComponent({ joker, index }: JokerProps) {
             </label>
 
             <label htmlFor={polychromeId} className="form-check-label d-block">
-              Polychrome?
+              xMult
             </label>
           </div>
           <div className="col w-25">
@@ -162,12 +162,12 @@ function JokerComponent({ joker, index }: JokerProps) {
             />
 
             <input
-              className="form-check-input"
+              className="form-control form-control-sm"
               id={polychromeId}
-              type="Checkbox"
-              defaultChecked={joker.polychrome}
+              type="number"
+              defaultValue={joker.xmult}
               onChange={(e) =>
-                updateJoker(index, { polychrome: e.target.checked })
+                updateJoker(index, { xmult: Number(e.target.value) })
               }
             />
           </div>
