@@ -22,8 +22,8 @@ export type AppState = {
 };
 
 export const useAppStore = create<AppState>()(
-  // @ts-ignore
   persist(
+    // @ts-ignore
     (set: any, get: any) => ({
       jokers: [],
       setJokers: (jokers: Joker[]) => set({ jokers }),
@@ -35,11 +35,19 @@ export const useAppStore = create<AppState>()(
         set((state: AppState) => ({
           jokers: [...state.jokers, newJoker(name)],
         })),
-      updateJoker: (index: number, joker: Partial<Joker>) => {
+      updateJoker<K extends keyof Joker>(
+        index: number,
+        key: K,
+        value: Joker[K],
+      ) {
         const { jokers } = get();
         const copy = Array.from(jokers);
+        let updates: Partial<Joker>;
+        if (key === "name") updates = newJoker(value as Joker<K>);
+        else updates = { [key]: value };
+
         // @ts-ignore
-        Object.assign(copy[index], joker);
+        Object.assign(copy[index], updates);
         set({ jokers: copy });
       },
       rounds: makeArray(4, () => ""),

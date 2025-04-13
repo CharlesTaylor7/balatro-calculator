@@ -1,14 +1,5 @@
 import { groupBy, maxBy, range } from "lodash";
-import zod from "zod";
-
-({
-  name: "Ice Cream",
-  mult: 0,
-  xmult: 1,
-  chips: 0,
-  id: "",
-  counter: 0,
-}) satisfies Joker;
+import zod, { any } from "zod";
 
 // TODO:
 //
@@ -33,11 +24,11 @@ type ScoringContext = Score & {
   pareidolia: boolean;
 };
 
-type AnyJoker = {
+type AnyJoker<Name = JokerName | null> = {
   // name is nullable, because plenty of jokers either:
   // have flat scoring: e.x. Jimbo, Gros Michel, etc.
   // have no scoring but have an edition that makes them score
-  name: JokerName | null;
+  name: Name;
   id: string;
   chips: number;
   mult: number;
@@ -66,7 +57,7 @@ type JokerEnum =
   counter: 0,
 }) satisfies Joker;
 
-export type Joker = AnyJoker & JokerEnum;
+export type Joker<Name = JokerName | null> = AnyJoker<Name> & JokerEnum;
 
 function __assertJokerContextHasJokerName(
   item: JokerWithContext["name"],
@@ -115,13 +106,32 @@ type Card = Readonly<{
 
 // FUNCTIONS
 export function newJoker(joker: string | null): Joker {
-  return {
-    name: joker as any,
+  const anyJoker: AnyJoker<typeof joker> = {
+    name: joker,
     id: newId(),
     chips: 0,
     mult: 0,
     xmult: 1,
   };
+  switch (joker) {
+    case "Ice Cream": {
+      const joker = anyJoker as Joker<"Ice Cream">;
+      joker.counter = 20;
+      return joker;
+    }
+    case "Photograph": {
+      const joker = anyJoker as Joker<"Photograph">;
+      joker.photograph = false;
+      return joker;
+    }
+
+    case "Green Joker": {
+      const joker = anyJoker as Joker<"Green Joker">;
+      joker.counter = 0;
+      return joker;
+    }
+  }
+  return anyJoker as Joker;
 }
 
 function newId() {
