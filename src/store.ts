@@ -69,7 +69,3 @@ export const useAppStore = create<AppState>()(
 function makeArray<T>(length: number, fn: (k: number) => T) {
   return Array.from({ length }, (_, k) => fn(k));
 }
-
-function newId() {
-  return Math.random().toString(36).slice(2);
-}

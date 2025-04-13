@@ -1,4 +1,15 @@
 import { groupBy, maxBy, range } from "lodash";
+import zod from "zod";
+
+({
+  name: "Ice Cream",
+  mult: 0,
+  xmult: 1,
+  chips: 0,
+  id: "",
+  counter: 0,
+}) satisfies Joker;
+
 // TODO:
 //
 // configuration:
@@ -14,14 +25,6 @@ const BRAND = Symbol();
 type Brand<K, T> = K & { [BRAND]: T };
 type Planets = Brand<Record<HandName, number>, "Planets">;
 type Hands = Brand<Record<HandName, number>, "Hands">;
-
-function newPlanets(): Planets {
-  return Object.fromEntries(HANDS.map((h) => [h, 0])) as Planets;
-}
-
-function newHands(): Hands {
-  return Object.fromEntries(HANDS.map((h) => [h, 0])) as Hands;
-}
 
 type ScoringContext = Score & {
   // levels
@@ -53,6 +56,15 @@ type JokerWithContext =
 type JokerEnum =
   | JokerWithContext
   | { name: Exclude<JokerName | null, JokerWithContext["name"]> };
+
+({
+  name: "Ice Cream",
+  mult: 0,
+  xmult: 1,
+  chips: 0,
+  id: "",
+  counter: 0,
+}) satisfies Joker;
 
 export type Joker = AnyJoker & JokerEnum;
 
@@ -102,7 +114,28 @@ type Card = Readonly<{
 }>;
 
 // FUNCTIONS
-// ts-nocheck
+export function newJoker(joker: string | null): Joker {
+  return {
+    name: joker as any,
+    id: newId(),
+    chips: 0,
+    mult: 0,
+    xmult: 1,
+  };
+}
+
+function newId() {
+  return Math.random().toString(36).slice(2);
+}
+
+function newPlanets(): Planets {
+  return Object.fromEntries(HANDS.map((h) => [h, 0])) as Planets;
+}
+
+function newHands(): Hands {
+  return Object.fromEntries(HANDS.map((h) => [h, 0])) as Hands;
+}
+
 function score(hand: string, jokers: Joker[]): Scored | null {
   const cards = parseHand(hand);
   console.log("cards", cards);

@@ -110,9 +110,11 @@ function JokerComponent({ joker, index }: JokerProps) {
           <Select
             id={nameId}
             defaultValue={joker.name}
+            // @ts-ignore
             options={JOKERS.map((j) => ({ value: j, label: j }))}
             placeholder="Any Joker"
             onChange={(option) =>
+              // @ts-ignore
               updateJoker(index, { name: option as JokerName })
             }
             isClearable
