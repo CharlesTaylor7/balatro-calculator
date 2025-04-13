@@ -219,7 +219,6 @@ export function scoreRounds(
       cumulative += total;
       hands.push({
         ...scored,
-        cards: hand,
         score: total,
         cumulative,
       });
@@ -481,7 +480,11 @@ const HAND_MATCHERS: Record<HandName, HandMatcher> = {
   },
   flush: (hand) =>
     hand.cards.length == 5 &&
-    hand.cards.filter((c) => c.suit == hand.cards[0].suit)
+    hand.cards.every((c) => c.suit != null) &&
+    hand.cards.every(
+      (c) =>
+        c.suit == "W" || c.suit == hand.cards.find((c) => c.suit != "W")?.suit,
+    )
       ? hand.cards
       : null,
   straight: (hand) => {
