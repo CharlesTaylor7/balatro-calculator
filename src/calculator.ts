@@ -10,10 +10,23 @@ import { groupBy, maxBy, range } from "lodash";
 type Score = { chips: number; mult: number };
 type Scored = Score & { name: HandName };
 
+const BRAND = Symbol();
+type Brand<K, T> = K & { [BRAND]: T };
+type Planets = Brand<Record<HandName, number>, "Planets">;
+type Hands = Brand<Record<HandName, number>, "Hands">;
+
+function newPlanets(): Planets {
+  return Object.fromEntries(HANDS.map((h) => [h, 0])) as Planets;
+}
+
+function newHands(): Hands {
+  return Object.fromEntries(HANDS.map((h) => [h, 0])) as Hands;
+}
+
 type ScoringContext = Score & {
   // levels
-  planets: Record<HandName, number>;
-  hands: Record<HandName, number>;
+  planets: Planets;
+  hands: Hands;
   pareidolia: boolean;
 };
 
@@ -112,20 +125,31 @@ function score(hand: string, jokers: Joker[]): Scored | null {
       : scoring.toSorted((a, b) => a.order - b.order);
     console.log("scoring", scoring);
 
-    const { chips, mult } = HAND_SCORING[handName];
-    const card_chips = scoring.reduce(
-      (acc, card) => acc + rankToChips(card.rank),
-      chips,
-    );
-    const card_mult = scoring.reduce((acc, card) => {
-      const mult = acc + card.mult;
-      return card.polychrome ? mult * 1.5 : mult;
-    }, mult);
+    const scoringContext: ScoringContext = {
+      ...HAND_SCORING[handName],
+      planets: newPlanets(),
+      hands: newHands(),
+      pareidolia: jokers.some((j) => j.name === "Pareidolia"),
+    };
+    for (const card of scoring) {
+      scoringContext.chips += card.chips;
+      scoringContext.mult += card.mult;
+      scoringContext.mult *= card.polychrome ? 1.5 : 1.0;
+      for (const joker of jokers) {
+        visitCard(scoringContext, joker, card);
+      }
+    }
+    for (const joker of jokers) {
+      scoringContext.chips += joker.chips;
+      scoringContext.mult += joker.mult;
+      scoringContext.mult *= joker.polychrome ? 1.5 : 1.0;
+      visitHand(scoringContext, joker, { name: handName, cards, groups });
+    }
 
     return {
       name: handName,
-      chips: card_chips,
-      mult: card_mult,
+      chips: scoringContext.chips,
+      mult: scoringContext.mult,
     };
   }
   throw new Error("no matching hand");
@@ -541,4 +565,5 @@ export const JOKERS = [
   "Misprint",
   "Hanging Fist",
   "Splash",
+  "Pareidolia",
 ] as const;
