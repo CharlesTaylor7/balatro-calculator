@@ -20,10 +20,27 @@ Misprint, Bloodstone, etc. introduce probabilistic scoring.
 
 ## Non-Goals
 - Not intended to be a full balatro sim. Buy the game!
-- Handling all joker interactions outside of a round score.
+- Handling all joker interactions outside of a round score. Buy the game!
+- Images for Jokers. This sim is intentionally ugly. Buy the game!
 
 
 ## Development
 Pretty straightforward. Using yarn v4. 
 Get started by running `yarn & yarn dev`
 Other scripts listed in the `package.json`
+
+## How to use
+
+Hands are parsed from a shorthand syntax.
+`TC` = Ten of Clubs
+`TC C5 M10 X2` = Ten of clubs with +5 chips +10 mult x2 mult. (i.e. Holographic Glass Ten of Clubs upgraded once with "Hiker")
+cards are separated by ","
+
+The regex syntax for parsing cards is:
+
+```
+  /(?<rank>[2-9AKQJT])(?<suit>[WCDHS])?\s*(C(?<chips>\d+))?\s*(M(?<mult>\d+))?\s*(X(?<xmult>[\d.]+))?/;
+```
+"W" means wild suit.
+If suit is not provided, the suit is flagged as "unknown" and the hand can't be a flush.
+Most parts of the Card syntax are optional, only required part is the rank.
