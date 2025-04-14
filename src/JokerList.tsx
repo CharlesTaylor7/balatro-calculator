@@ -1,6 +1,7 @@
 import { useId } from "react";
-import { useAppStore } from "./store";
-import { Joker, JOKERS } from "./calculator";
+import { useAppStore } from "@/store";
+import { Button } from "@/components/ui/button";
+import { Joker, JOKERS } from "@/calculator";
 import {
   DndContext,
   closestCenter,
@@ -55,12 +56,9 @@ export function JokerList() {
 
   return (
     <div className="">
-      <button
-        className="btn btn-sm btn-primary nowrap"
-        onClick={() => pushJoker(null)}
-      >
+      <Button variant="default" onClick={() => pushJoker(null)}>
         New Joker
-      </button>
+      </Button>
 
       <DndContext
         sensors={sensors}
@@ -126,13 +124,9 @@ function JokerComponent({ joker, index }: JokerProps) {
           clearValue={() => updateJoker(index, "vars", { name: null })}
         />
 
-        <button
-          className="btn btn-sm btn-danger "
-          style={{ width: "2rem", height: "2rem" }}
-          onClick={() => deleteJoker(joker.id)}
-        >
+        <Button variant="destructive" onClick={() => deleteJoker(joker.id)}>
           x
-        </button>
+        </Button>
       </div>
       <div
         className="d-grid align-items-center justify-items-center"
@@ -150,6 +144,7 @@ function JokerComponent({ joker, index }: JokerProps) {
               type="number"
               value={joker.vars.counter}
               onChange={(e) =>
+                // @ts-ignore
                 updateJoker(index, "vars", { counter: Number(e.target.value) })
               }
             />
