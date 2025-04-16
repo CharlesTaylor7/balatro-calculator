@@ -1,0 +1,48 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/**
+      - src/**
+      - index.html
+      - vite.config.ts
+      - yarn.lock
+
+jobs:
+  deploy:
+    name: Deploy to Github Pages
+    permissions:
+      pages: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Yarn
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "yarn"
+
+      - name: Validate
+        run: |
+          yarn install
+          yarn typecheck
+          yarn lint
+
+      - name: Build
+        run: |
+          yarn build
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          publish_dir: dist
