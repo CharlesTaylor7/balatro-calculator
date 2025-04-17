@@ -33,12 +33,13 @@ jobs:
 
       - name: Validate
         run: |
-          yarn install
+          yarn install --frozen-lockfile
           yarn typecheck
           yarn lint
 
       - name: Build
         run: |
+          yarn install --production --frozen-lockfile
           yarn build
 
       - name: Deploy
