@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Joker, JOKERS } from "@/calculator";
 import {
   DndContext,
@@ -14,7 +15,6 @@ import {
   useSensors,
   DragEndEvent,
 } from "@dnd-kit/core";
-import Select from "react-select";
 import {
   arrayMove,
   SortableContext,
