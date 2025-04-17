@@ -3,7 +3,7 @@ import { Rounds } from "./Rounds";
 
 export default function App() {
   return (
-    <div className="d-flex align-items-start justify-content-between">
+    <div className="flex items-start justify-between gap-2">
       <JokerList />
       <Rounds />
     </div>

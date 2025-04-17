@@ -58,7 +58,7 @@ export function JokerList() {
   }
 
   return (
-    <>
+    <div className="flex flex-col items-start gap-2">
       <Button variant="default" onClick={() => pushJoker(null)}>
         New Joker
       </Button>
@@ -77,7 +77,7 @@ export function JokerList() {
           ))}
         </SortableContext>
       </DndContext>
-    </>
+    </div>
   );
 }
 type JokerProps = {

@@ -1,56 +1,54 @@
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableHead,
+} from "@/components/ui/table";
+
 import { useAppStore } from "./store";
+import { Input } from "./components/ui/input";
 
 export function Rounds() {
   const { rounds, getScoredHands, setHand } = useAppStore();
   const hands = getScoredHands();
   return (
-    <table
-      className="table table-bordered table-info table-striped"
-      style={{ width: "400px" }}
-    >
-      <thead>
-        <tr>
-          <th scope="col">#</th>
-          <th scope="col">Hand</th>
-          <th scope="col" className="text-center">
-            Chips
-          </th>
-          <th scope="col" className="text-center">
-            Mult
-          </th>
-          <th scope="col" className="text-center">
-            Score
-          </th>
-          <th scope="col" className="text-center">
-            Cumulative
-          </th>
-          <th scope="col" className="text-center">
-            Type
-          </th>
-        </tr>
-      </thead>
-      <tbody>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead scope="col">#</TableHead>
+          <TableHead scope="col">Hand</TableHead>
+          <TableHead scope="col">Chips</TableHead>
+          <TableHead scope="col">Mult</TableHead>
+          <TableHead scope="col">Score</TableHead>
+          <TableHead scope="col">Cumulative</TableHead>
+          <TableHead scope="col">Type</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {rounds.map((raw, i) => {
           const hand = hands[i];
           return (
-            <tr key={i} className="text-nowrap">
-              <th>{i + 1}</th>
-              <td style={{ width: "100px" }}>
-                <input
-                  className="form-control form-control-sm"
+            <TableRow key={i}>
+              <TableHead>{i + 1}</TableHead>
+              <TableCell>
+                <Input
+                  className="w-20"
+                  type="text"
                   value={raw}
                   onChange={(e) => setHand(i, e.target.value)}
                 />
-              </td>
-              <td className="text-end">{hand?.chips}</td>
-              <td className="text-end">{hand?.mult}</td>
-              <td className="text-end">{hand?.score}</td>
-              <td className="text-end">{hand?.cumulative}</td>
-              <td>{hand?.name}</td>
-            </tr>
+              </TableCell>
+              <TableCell>{hand?.chips}</TableCell>
+              <TableCell>{hand?.mult}</TableCell>
+              <TableCell>{hand?.score}</TableCell>
+              <TableCell>{hand?.cumulative}</TableCell>
+              <TableCell>{hand?.name}</TableCell>
+            </TableRow>
           );
         })}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   );
 }
