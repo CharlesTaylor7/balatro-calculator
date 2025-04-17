@@ -1,6 +1,9 @@
 import { useId } from "react";
 import { useAppStore } from "@/store";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Joker, JOKERS } from "@/calculator";
 import {
   DndContext,
@@ -55,7 +58,7 @@ export function JokerList() {
   }
 
   return (
-    <div className="">
+    <>
       <Button variant="default" onClick={() => pushJoker(null)}>
         New Joker
       </Button>
@@ -74,7 +77,7 @@ export function JokerList() {
           ))}
         </SortableContext>
       </DndContext>
-    </div>
+    </>
   );
 }
 type JokerProps = {
@@ -101,45 +104,35 @@ function JokerComponent({ joker, index }: JokerProps) {
 
   const name = joker.vars.name;
   return (
-    <div
-      className="card"
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-    >
-      <div className="d-flex align-items-center ">
-        <Select
-          // @ts-ignore
-          style={{ width: "220px" }}
-          value={name && { value: name, label: name }}
-          options={JOKERS.map((j) => ({ value: j, label: j }))}
-          placeholder="Any Joker"
-          // @ts-ignore
-          onChange={(option: Option) => {
+    <Card ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <CardHeader className="flex">
+        <CardTitle>
+          <Select
+            className="w-60"
             // @ts-ignore
-            updateJoker(index, "vars", { name: option?.value });
-          }}
-          isClearable={name != null}
-          clearValue={() => updateJoker(index, "vars", { name: null })}
-        />
 
+            value={name && { value: name, label: name }}
+            options={JOKERS.map((j) => ({ value: j, label: j }))}
+            placeholder="Any Joker"
+            // @ts-ignore
+            onChange={(option: Option) => {
+              // @ts-ignore
+              updateJoker(index, "vars", { name: option?.value });
+            }}
+            isClearable={name != null}
+            clearValue={() => updateJoker(index, "vars", { name: null })}
+          />
+        </CardTitle>
         <Button variant="destructive" onClick={() => deleteJoker(joker.id)}>
           x
         </Button>
-      </div>
-      <div
-        className="d-grid align-items-center justify-items-center"
-        style={{ gridTemplateColumns: "auto auto" }}
-      >
+      </CardHeader>
+      <CardContent>
         {joker.vars && "counter" in joker.vars ? (
           <>
-            <label className="form-label d-block cursor-grab" htmlFor={chipsId}>
-              Counter
-            </label>
-            <input
-              className="form-control form-control-sm"
-              style={{ width: "3rem" }}
+            <Label htmlFor={chipsId}>Counter</Label>
+            <Input
+              className="w-20"
               id={counterId}
               type="number"
               value={joker.vars.counter}
@@ -150,44 +143,39 @@ function JokerComponent({ joker, index }: JokerProps) {
             />
           </>
         ) : null}
+        <div className="flex flex-row gap-2 items-center">
+          <Label htmlFor={chipsId}>Chips</Label>
+          <Input
+            className="w-20"
+            id={chipsId}
+            type="number"
+            defaultValue={joker.chips}
+            onChange={(e) =>
+              updateJoker(index, "chips", Number(e.target.value))
+            }
+          />
 
-        <label className="form-label d-block cursor-grab" htmlFor={chipsId}>
-          Chips
-        </label>
-        <input
-          className="form-control form-control-sm"
-          style={{ width: "3rem" }}
-          id={chipsId}
-          type="number"
-          defaultValue={joker.chips}
-          onChange={(e) => updateJoker(index, "chips", Number(e.target.value))}
-        />
+          <Label htmlFor={multId}>Mult</Label>
+          <Input
+            className="w-20"
+            id={multId}
+            type="number"
+            defaultValue={joker.mult}
+            onChange={(e) => updateJoker(index, "mult", Number(e.target.value))}
+          />
 
-        <label className="form-label d-block cursor-grab" htmlFor={multId}>
-          Mult
-        </label>
-        <input
-          className="form-control form-control-sm"
-          style={{ width: "3rem" }}
-          id={multId}
-          type="number"
-          defaultValue={joker.mult}
-          onChange={(e) => updateJoker(index, "mult", Number(e.target.value))}
-        />
-
-        <label htmlFor={xmultId} className="form-check-label d-block">
-          xMult
-        </label>
-
-        <input
-          className="form-control form-control-sm"
-          style={{ width: "3rem" }}
-          id={xmultId}
-          type="number"
-          defaultValue={joker.xmult}
-          onChange={(e) => updateJoker(index, "xmult", Number(e.target.value))}
-        />
-      </div>
-    </div>
+          <Label htmlFor={xmultId}>xMult</Label>
+          <Input
+            className="w-20"
+            id={xmultId}
+            type="number"
+            defaultValue={joker.xmult}
+            onChange={(e) =>
+              updateJoker(index, "xmult", Number(e.target.value))
+            }
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
