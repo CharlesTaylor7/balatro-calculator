@@ -4,7 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 import { Joker, JOKERS } from "@/calculator";
 import {
   DndContext,
@@ -80,14 +86,12 @@ export function JokerList() {
     </div>
   );
 }
+
 type JokerProps = {
   joker: Joker;
   index: number;
 };
-type Option = Readonly<{
-  label: string;
-  value: string;
-}>;
+
 function JokerComponent({ joker, index }: JokerProps) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: joker.id });
@@ -108,20 +112,20 @@ function JokerComponent({ joker, index }: JokerProps) {
       <CardHeader className="flex">
         <CardTitle>
           <Select
-            className="w-60"
-            // @ts-ignore
-
-            value={name && { value: name, label: name }}
-            options={JOKERS.map((j) => ({ value: j, label: j }))}
-            placeholder="Any Joker"
-            // @ts-ignore
-            onChange={(option: Option) => {
-              // @ts-ignore
-              updateJoker(index, "vars", { name: option?.value });
-            }}
-            isClearable={name != null}
-            clearValue={() => updateJoker(index, "vars", { name: null })}
-          />
+            value={name ?? undefined}
+            onValueChange={(name) => updateJoker(index, "vars", { name })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Any Joker" />
+            </SelectTrigger>
+            <SelectContent>
+              {JOKERS.map((j) => (
+                <SelectItem key={j} value={j}>
+                  {j}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </CardTitle>
         <Button variant="destructive" onClick={() => deleteJoker(joker.id)}>
           x
