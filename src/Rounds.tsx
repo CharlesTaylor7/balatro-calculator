@@ -7,12 +7,14 @@ import {
   TableHead,
 } from "@/components/ui/table";
 
-import { useAppStore } from "./store";
-import { Input } from "./components/ui/input";
+import { useAppState } from "@/store";
+import { scoreRounds } from "@/calculator";
+import { Input } from "@/components/ui/input";
 
 export function Rounds() {
-  const { rounds, getScoredHands, setHand } = useAppStore();
-  const hands = getScoredHands();
+  const state = useAppState();
+  const { rounds, setHand } = state;
+  const hands = scoreRounds(state);
   return (
     <Table>
       <TableHeader>

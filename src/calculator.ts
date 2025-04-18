@@ -1,4 +1,5 @@
 import { groupBy, maxBy, range, cloneDeep } from "lodash";
+import type { State } from "@/store";
 
 // TODO:
 //
@@ -11,15 +12,10 @@ import { groupBy, maxBy, range, cloneDeep } from "lodash";
 type Score = { chips: number; mult: number };
 type Scored = Score & { name: PokerHand };
 
-const BRAND = Symbol();
-type Brand<K, T> = K & { [BRAND]: T };
-type Planets = Brand<Record<PokerHand, number>, "Planets">;
-type Hands = Brand<Record<PokerHand, number>, "Hands">;
+export type HandInfo = Record<PokerHand, { lvl: number; count: number }>;
 
 type ScoringContext = Score & {
-  // levels
-  planets: Planets;
-  hands: Hands;
+  handInfo: HandInfo;
   jokers: Joker[];
   pareidolia: boolean;
   splash: boolean;
@@ -147,12 +143,10 @@ function newId() {
   return Math.random().toString(36).slice(2);
 }
 
-function newPlanets(): Planets {
-  return Object.fromEntries(HANDS.map((h) => [h, 0])) as Planets;
-}
-
-function newHands(): Hands {
-  return Object.fromEntries(HANDS.map((h) => [h, 0])) as Hands;
+export function newHandInfo(): HandInfo {
+  return Object.fromEntries(
+    HANDS.map((h) => [h, { lvl: 0, count: 0 }]),
+  ) as HandInfo;
 }
 
 function scoreHand(context: ScoringContext, hand: string): Scored | null {
@@ -187,7 +181,7 @@ function scoreHand(context: ScoringContext, hand: string): Scored | null {
         visitCard(context, joker, card);
       }
     }
-    context.hands[handName]++;
+    context.handInfo[handName].count++;
     for (const joker of context.jokers) {
       context.chips += joker.chips;
       context.mult += joker.mult;
@@ -252,22 +246,20 @@ function rankToChips(rank: Rank) {
 }
 
 export function scoreRounds(
-  rounds: string[],
-  jokers: Joker[],
+  state: Pick<State, "handInfo" | "jokers" | "rounds">,
 ): (Hand | null)[] {
   const scoringContext: ScoringContext = {
     chips: 0,
     mult: 0,
-    jokers: cloneDeep(jokers),
-    planets: newPlanets(),
-    hands: newHands(),
-    pareidolia: jokers.some((j) => j.vars.name === "Pareidolia"),
-    splash: jokers.some((j) => j.vars.name === "Splash"),
+    handInfo: state.handInfo,
+    jokers: cloneDeep(state.jokers),
+    pareidolia: state.jokers.some((j) => j.vars.name === "Pareidolia"),
+    splash: state.jokers.some((j) => j.vars.name === "Splash"),
   };
 
   const hands: (Hand | null)[] = [];
   let cumulative = 0;
-  for (const hand of rounds) {
+  for (const hand of state.rounds) {
     const scored = scoreHand(scoringContext, hand);
 
     if (scored == null) {
@@ -315,6 +307,7 @@ export function parseHand(hand: string): Card[] {
 function isFaceCard(rank: Rank, context: ScoringContext) {
   return rank === "K" || rank === "Q" || rank === "J" || context.pareidolia;
 }
+
 function visitCard(context: ScoringContext, joker: Joker, card: Card) {
   switch (joker.vars.name) {
     case "Scholar":
@@ -401,10 +394,12 @@ function visitHand(
       return;
 
     case "Supernova":
-      context.mult += context.hands[hand.name];
+      context.mult += context.handInfo[hand.name].count;
       return;
     case "Obelisk": {
-      const handCounts = Object.entries(context.hands);
+      const handCounts = Object.entries(context.handInfo).map(
+        ([h, o]) => [h, o.count] as [PokerHand, number],
+      );
       const max = Math.max(...handCounts.map((x) => x[1]));
       const mostPlayed = handCounts
         .filter((pair) => pair[1] === max)
@@ -475,10 +470,9 @@ function visitHand(
 }
 
 function scorePokerHand(context: ScoringContext, hand: PokerHand) {
-  context.chips +=
-    HAND_SCORING[hand].chips + context.planets[hand] * HAND_SCALING[hand].chips;
-  context.mult +=
-    HAND_SCORING[hand].mult + context.planets[hand] * HAND_SCALING[hand].mult;
+  const { lvl } = context.handInfo[hand];
+  context.chips += HAND_SCORING[hand].chips + lvl * HAND_SCALING[hand].chips;
+  context.mult += HAND_SCORING[hand].mult + lvl * HAND_SCALING[hand].mult;
 }
 
 // CONSTANTS

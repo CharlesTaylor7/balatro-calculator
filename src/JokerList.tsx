@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { useAppStore } from "@/store";
+import { useAppState } from "@/store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,7 +47,7 @@ export function JokerList() {
     }),
   );
 
-  const { jokers, pushJoker, setJokers } = useAppStore();
+  const { jokers, pushJoker, setJokers } = useAppState();
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -95,7 +95,7 @@ type JokerProps = {
 function JokerComponent({ joker, index }: JokerProps) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: joker.id });
-  const { deleteJoker, updateJoker } = useAppStore();
+  const { deleteJoker, updateJoker } = useAppState();
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),

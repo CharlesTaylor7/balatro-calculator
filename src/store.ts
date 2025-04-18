@@ -1,19 +1,24 @@
-import { create } from "zustand";
+import { create, type ExtractState } from "zustand";
 import { persist, combine } from "zustand/middleware";
 import type { Joker, JokerId, JokerName } from "./calculator";
-import { scoreRounds, newJoker } from "./calculator";
+import { newJoker, newHandInfo } from "./calculator";
+
+type Stake = "white" | "green" | "purple";
+export type State = ExtractState<typeof useAppState>;
 
 // TODO:
 // configuration:
 // - plasma has a different scoring and different blind amounts
 // - stake, green stake & purple stake increase the blind amounts
 //
-export const useAppStore = create(
+export const useAppState = create(
   persist(
     combine(
       {
         jokers: [] as Joker[],
         rounds: makeArray(4, () => ""),
+        handInfo: newHandInfo(),
+        stake: "white" as Stake,
       },
 
       (set, get) => ({
@@ -46,10 +51,6 @@ export const useAppStore = create(
           Object.assign(copy[index], updates);
           console.log("jokers", copy);
           set({ jokers: copy });
-        },
-        getScoredHands: () => {
-          const { rounds, jokers } = get();
-          return scoreRounds(rounds, jokers);
         },
         setHand: (index: number, hand: string) =>
           set((state) => {
