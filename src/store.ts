@@ -10,7 +10,6 @@ export type State = ExtractState<typeof useAppState>;
 // configuration:
 // - plasma has a different scoring and different blind amounts
 // - stake, green stake & purple stake increase the blind amounts
-//
 export const useAppState = create(
   persist(
     combine(
@@ -20,7 +19,6 @@ export const useAppState = create(
         handInfo: newHandInfo(),
         stake: "white" as Stake,
       },
-
       (set, get) => ({
         setJokers: (jokers: Joker[]) => set({ jokers }),
         deleteJoker: (id: JokerId) =>
@@ -64,10 +62,6 @@ export const useAppState = create(
     ),
     {
       name: "balatro",
-      partialize: (state) =>
-        Object.fromEntries(
-          Object.entries(state).filter((pair) => typeof pair[1] !== "function"),
-        ),
     },
   ),
 );
