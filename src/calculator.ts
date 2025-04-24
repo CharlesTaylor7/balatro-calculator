@@ -14,7 +14,7 @@ type Scored = Score & { name: PokerHand };
 
 export type HandInfo = Record<PokerHand, { lvl: number; count: number }>;
 
-type ScoringContext = Score & {
+export type ScoringContext = Score & {
   handInfo: HandInfo;
   jokers: Joker[];
   pareidolia: boolean;
@@ -95,7 +95,7 @@ export type Suit = "C" | "D" | "H" | "S";
 export type ExtendedSuit = Suit | "W" | Nullish;
 
 // Base card properties that are readonly
-type Card = {
+export type Card = {
   // order the cards in the hand will score
   order: number;
   rank: Rank;
@@ -103,9 +103,8 @@ type Card = {
   chips: number;
   mult: number;
   xmult: number;
-  debuffed: boolean; 
+  debuffed: boolean;
 };
-
 
 // FUNCTIONS
 export function newJoker(name: string | null): Joker {
@@ -155,7 +154,6 @@ export function newJoker(name: string | null): Joker {
           kind: "counter",
           name,
           counter: 0,
-    
         },
       };
 
@@ -234,7 +232,7 @@ function isSimpleJokerName(name: string): name is SimpleJokerName {
     "Photograph",
   ];
   // Check if name is in JOKERS array
-  const isInJokers = JOKERS.some(jokerName => jokerName === name);
+  const isInJokers = JOKERS.some((jokerName) => jokerName === name);
   return isInJokers && !counterOrPhotographNames.includes(name);
 }
 
@@ -244,7 +242,7 @@ function newId() {
 
 export function newHandInfo(): HandInfo {
   return Object.fromEntries(
-    HANDS.map((h) => [h, { lvl: 0, count: 0 }]),
+    HANDS.map((h) => [h, { lvl: 0, count: 0 }])
   ) as HandInfo;
 }
 
@@ -252,7 +250,7 @@ function scoreHand(context: ScoringContext, hand: string): Scored | null {
   context.chips = 0;
   context.mult = 0;
   const cards = parseHand(hand);
-  
+
   //  nothing matches an empty hand
   if (cards.length === 0) return null;
 
@@ -290,7 +288,7 @@ function scoreHand(context: ScoringContext, hand: string): Scored | null {
       context.chips += joker.chips;
       context.mult += joker.mult;
       context.mult *= joker.xmult;
-      
+
       // Apply joker effects to each non-debuffed card
       for (const card of cards) {
         if (!card.debuffed) {
@@ -358,9 +356,11 @@ function rankToChips(rank: Rank) {
   }
 }
 
-export function scoreRounds(
-  state: Pick<State, "handInfo" | "jokers" | "rounds" | "bossBlind">,
-): (Hand | null)[] {
+export type RoundInfo = Pick<
+  State,
+  "handInfo" | "jokers" | "rounds" | "bossBlind"
+>;
+export function scoreRounds(state: RoundInfo): (Hand | null)[] {
   const scoringContext: ScoringContext = {
     chips: 0,
     mult: 0,
@@ -427,7 +427,7 @@ function isFaceCard(rank: Rank, context: ScoringContext) {
 // Display function for counter jokers
 export function displayCounter(joker: CounterJoker): string {
   const { name, counter } = joker;
-  
+
   switch (name) {
     case "Ice Cream":
       return `+${5 * counter} chips`;
@@ -446,7 +446,10 @@ export function displayCounter(joker: CounterJoker): string {
   }
 }
 
-function applyBossBlindDebuffs(context: ScoringContext, cards: Card[]): void {
+export function applyBossBlindDebuffs(
+  context: ScoringContext,
+  cards: Card[]
+): void {
   if (!context.bossBlind) return;
 
   for (const card of cards) {
@@ -564,7 +567,7 @@ function visitCard(context: ScoringContext, joker: Joker, card: Card) {
 function visitHand(
   context: ScoringContext,
   joker: Joker,
-  hand: HandNameAndDetails,
+  hand: HandNameAndDetails
 ) {
   switch (joker.vars.name) {
     case "Green Joker":
@@ -580,7 +583,7 @@ function visitHand(
       return;
     case "Obelisk": {
       const handCounts = Object.entries(context.handInfo).map(
-        ([h, o]) => [h, o.count] as [PokerHand, number],
+        ([h, o]) => [h, o.count] as [PokerHand, number]
       );
       const max = Math.max(...handCounts.map((x) => x[1]));
       const mostPlayed = handCounts
@@ -656,10 +659,10 @@ function scorePokerHand(context: ScoringContext, hand: PokerHand) {
   // Apply base scoring
   let baseChips = HAND_SCORING[hand].chips;
   let baseMult = HAND_SCORING[hand].mult;
-  
+
   // Apply level scaling
   let effectiveLevel = lvl;
-  
+
   // Apply boss blind effects
   if (context.bossBlind) {
     switch (context.bossBlind) {
@@ -676,7 +679,7 @@ function scorePokerHand(context: ScoringContext, hand: PokerHand) {
       // They would be applied during card processing
     }
   }
-  
+
   context.chips += baseChips + effectiveLevel * HAND_SCALING[hand].chips;
   context.mult += baseMult + effectiveLevel * HAND_SCALING[hand].mult;
 }
@@ -777,7 +780,7 @@ const HAND_MATCHERS: Record<PokerHand, HandMatcher> = {
     hand.cards.every((c) => c.suit != null) &&
     hand.cards.every(
       (c) =>
-        c.suit == "W" || c.suit == hand.cards.find((c) => c.suit != "W")?.suit,
+        c.suit == "W" || c.suit == hand.cards.find((c) => c.suit != "W")?.suit
     )
       ? hand.cards
       : null,

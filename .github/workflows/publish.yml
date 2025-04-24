@@ -36,6 +36,7 @@ jobs:
           yarn install --immutable
           yarn typecheck
           yarn lint
+          yarn test
 
       - name: Build
         run: |
