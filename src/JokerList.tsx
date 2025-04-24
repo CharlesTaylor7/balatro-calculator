@@ -149,19 +149,7 @@ function JokerComponent({ joker, index }: JokerProps) {
             />
           </>
         )}
-        {joker.vars.kind === "photograph" && (
-          <>
-            <Label htmlFor={counterId}>Photograph</Label>
-            <input
-              id={counterId}
-              type="checkbox"
-              checked={joker.vars.photograph}
-              onChange={(e) =>
-                updateJoker(index, "vars", { photograph: e.target.checked })
-              }
-            />
-          </>
-        )}
+        {/* Photograph joker has no UI controls */}
         <div className="flex flex-row gap-2 items-center">
           <Label htmlFor={chipsId}>Chips</Label>
           <Input

@@ -248,9 +248,9 @@ function isSimpleJokerName(name: string): name is SimpleJokerName {
     "Ice Cream",
     "Photograph",
   ];
-  return (
-    JOKERS.includes(name as any) && !counterOrPhotographNames.includes(name)
-  );
+  // Check if name is in JOKERS array
+  const isInJokers = JOKERS.some(jokerName => jokerName === name);
+  return isInJokers && !counterOrPhotographNames.includes(name);
 }
 
 function newId() {
@@ -590,7 +590,6 @@ function scorePokerHand(context: ScoringContext, hand: PokerHand) {
 }
 
 // CONSTANTS
-/* eslint-disable-next-line */
 const RANKS = [
   "2",
   "3",

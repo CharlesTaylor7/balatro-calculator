@@ -1,6 +1,6 @@
 // https://ui.shadcn.com/docs/dark-mode/vite
 import { createContext, useContext, useEffect, useState } from "react";
-import { ThemeProviderContext, Theme } from "@/hooks/theme-context";
+import { ThemeProviderContext, Theme } from "@/hooks/theme";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
