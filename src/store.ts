@@ -9,6 +9,7 @@ import type {
   PhotographJoker,
   SimpleJoker,
   CounterJokerName,
+  BossBlind,
 } from "./calculator";
 import { newJoker, newHandInfo } from "./calculator";
 
@@ -27,6 +28,7 @@ export const useAppState = create(
         rounds: makeArray(4, () => ""),
         handInfo: newHandInfo(),
         stake: "white" as Stake,
+        bossBlind: undefined as BossBlind | undefined,
       },
       (set, get) => ({
         setJokers: (jokers: Joker[]) => set({ jokers }),
@@ -91,6 +93,8 @@ export const useAppState = create(
             rounds[index] = hand;
             return { rounds };
           }),
+
+        setBossBlind: (bossBlind: BossBlind | undefined) => set({ bossBlind }),
       }),
     ),
     {

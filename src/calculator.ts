@@ -19,6 +19,7 @@ type ScoringContext = Score & {
   jokers: Joker[];
   pareidolia: boolean;
   splash: boolean;
+  bossBlind?: BossBlind;
 };
 
 // Define a discriminated union for joker variants
@@ -360,15 +361,16 @@ function rankToChips(rank: Rank) {
 }
 
 export function scoreRounds(
-  state: Pick<State, "handInfo" | "jokers" | "rounds">,
+  state: Pick<State, "handInfo" | "jokers" | "rounds" | "bossBlind">,
 ): (Hand | null)[] {
   const scoringContext: ScoringContext = {
     chips: 0,
     mult: 0,
-    handInfo: state.handInfo,
-    jokers: cloneDeep(state.jokers),
+    handInfo: cloneDeep(state.handInfo),
+    jokers: state.jokers,
     pareidolia: state.jokers.some((j) => j.vars.name === "Pareidolia"),
     splash: state.jokers.some((j) => j.vars.name === "Splash"),
+    bossBlind: state.bossBlind,
   };
 
   const hands: (Hand | null)[] = [];
@@ -423,6 +425,33 @@ function isFaceCard(rank: Rank, context: ScoringContext) {
 }
 
 function visitCard(context: ScoringContext, joker: Joker, card: Card) {
+  // Check for boss blind debuffs
+  let isDebuffed = false;
+  
+  if (context.bossBlind) {
+    switch (context.bossBlind) {
+      case "The Club":
+        isDebuffed = card.suit === "C";
+        break;
+      case "The Goad":
+        isDebuffed = card.suit === "S";
+        break;
+      case "The Window":
+        isDebuffed = card.suit === "D";
+        break;
+      case "The Head":
+        isDebuffed = card.suit === "H";
+        break;
+      case "The Plant":
+        isDebuffed = card.rank === "J" || card.rank === "Q" || card.rank === "K";
+        break;
+    }
+  }
+  
+  // If card is debuffed, we skip applying joker effects to it
+  if (isDebuffed) {
+    return;
+  }
   switch (joker.vars.name) {
     case "Scholar":
       if (card.rank === "A") {
@@ -585,9 +614,63 @@ function visitHand(
 
 function scorePokerHand(context: ScoringContext, hand: PokerHand) {
   const { lvl } = context.handInfo[hand];
-  context.chips += HAND_SCORING[hand].chips + lvl * HAND_SCALING[hand].chips;
-  context.mult += HAND_SCORING[hand].mult + lvl * HAND_SCALING[hand].mult;
+  // Apply base scoring
+  let baseChips = HAND_SCORING[hand].chips;
+  let baseMult = HAND_SCORING[hand].mult;
+  
+  // Apply level scaling
+  let effectiveLevel = lvl;
+  
+  // Apply boss blind effects
+  if (context.bossBlind) {
+    switch (context.bossBlind) {
+      case "The Arm":
+        // Decrease level by 1 (minimum 1)
+        effectiveLevel = Math.max(1, effectiveLevel - 1);
+        break;
+      case "The Flint":
+        // Base chips and mult are halved
+        baseChips = Math.floor(baseChips / 2);
+        baseMult = Math.floor(baseMult / 2);
+        break;
+      // Other boss blinds affect cards, not the hand scoring directly
+      // They would be applied during card processing
+    }
+  }
+  
+  context.chips += baseChips + effectiveLevel * HAND_SCALING[hand].chips;
+  context.mult += baseMult + effectiveLevel * HAND_SCALING[hand].mult;
 }
+
+// Boss Blind Types
+export const BOSS_BLINDS = [
+  "The Arm",
+  "The Club",
+  "The Psychic",
+  "The Goad",
+  "The Window",
+  "The Eye",
+  "The Mouth",
+  "The Plant",
+  "The Head",
+  "The Flint",
+] as const;
+
+export type BossBlind = (typeof BOSS_BLINDS)[number];
+
+// Descriptions of boss blind effects
+export const BOSS_BLIND_DESCRIPTIONS: Record<BossBlind, string> = {
+  "The Arm": "Decrease level of played poker hand by 1",
+  "The Club": "All Club cards are debuffed",
+  "The Psychic": "Must play 5 cards (not all cards need to score)",
+  "The Goad": "All Spade cards are debuffed",
+  "The Window": "All Diamond cards are debuffed",
+  "The Eye": "No repeat hand types this round",
+  "The Mouth": "Only one hand type can be played this round",
+  "The Plant": "All face cards are debuffed",
+  "The Head": "All Heart cards are debuffed",
+  "The Flint": "Base Chips and Mult for played poker hands are halved",
+};
 
 // CONSTANTS
 const RANKS = [
