@@ -812,17 +812,11 @@ const HAND_MATCHERS: Record<PokerHand, HandMatcher> = {
       .map((c) => rankToOrder(c.rank))
       .toSorted((a, b) => b - a); // Sort in descending order
     
-    // Check for A-K-Q-J-10 straight (royal straight)
-    if (sorted[0] === 14 && sorted[1] === 13 && sorted[2] === 12 && sorted[3] === 11 && sorted[4] === 10) {
-      return hand.cards;
-    }
-    
     // Check for A-5-4-3-2 straight (wheel straight)
     if (sorted[0] === 14 && sorted[1] === 5 && sorted[2] === 4 && sorted[3] === 3 && sorted[4] === 2) {
       return hand.cards;
     }
     
-    // Check for regular straights
     const isRegularStraight = range(4).every((i) => sorted[i] === sorted[i + 1] + 1);
     if (isRegularStraight) return hand.cards;
     
