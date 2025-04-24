@@ -21,37 +21,55 @@ type ScoringContext = Score & {
   splash: boolean;
 };
 
-export type Joker = {
-  // name is nullable, because plenty of jokers either:
-  // have flat scoring: e.x. Jimbo, Gros Michel, etc.
-  // have no scoring but have an edition that makes them score
+// Define a discriminated union for joker variants
+export type JokerVariant = CounterJoker | PhotographJoker | SimpleJoker;
+
+// Counter jokers have a counter and display function
+export interface CounterJoker {
+  kind: "counter";
+  name: CounterJokerName;
+  counter: number;
+  display(): string;
+}
+
+// Photograph joker has a photograph boolean
+export interface PhotographJoker {
+  kind: "photograph";
+  name: "Photograph";
+  photograph: boolean;
+}
+
+// Simple jokers just have a name
+export interface SimpleJoker {
+  kind: "simple";
+  name: SimpleJokerName | null;
+}
+
+// The joker type with common properties and the variant
+export interface Joker {
   id: string;
   chips: number;
   mult: number;
   xmult: number;
-  vars: JokerUnion;
-};
+  vars: JokerVariant;
+}
+
 export type JokerId = Joker["id"];
 
-type JokerVariables =
-  | ({ name: "Green Joker" } & JokerCounter)
-  | ({ name: "Ride The Bus" } & JokerCounter)
-  | ({ name: "Obelisk" } & JokerCounter)
-  | ({ name: "Runner" } & JokerCounter)
-  | ({ name: "Square Joker" } & JokerCounter)
-  | ({ name: "Ice Cream" } & JokerCounter)
-  | { name: "Photograph"; photograph: boolean };
+// Names of jokers that use a counter
+export type CounterJokerName =
+  | "Green Joker"
+  | "Ride The Bus"
+  | "Obelisk"
+  | "Runner"
+  | "Square Joker"
+  | "Ice Cream";
 
-type JokerCounter = { counter: number; display: () => string };
-
-type JokerUnion = JokerVariables | { name: JokerNameWithoutVars };
-type JokerNameWithoutVars = Exclude<JokerName | null, JokerVariables["name"]>;
-
-function __assertJokerDetailsHasJokerName(
-  item: JokerVariables["name"],
-): JokerName {
-  return item;
-}
+// All joker names excluding counter jokers and photograph
+export type SimpleJokerName = Exclude<
+  JokerName,
+  CounterJokerName | "Photograph"
+>;
 
 export type Hand = {
   chips: number;
@@ -89,54 +107,150 @@ type Card = Readonly<{
 
 // FUNCTIONS
 export function newJoker(name: string | null): Joker {
-  const details = { name } as JokerUnion;
-  switch (details.name) {
-    case "Ice Cream":
-      details.counter = 20;
-      details.display = () => `+${details.counter} chips`;
-      break;
-
-    case "Photograph":
-      details.photograph = false;
-      break;
-
-    case "Green Joker":
-      details.counter = 0;
-      details.display = () => `+${details.counter} mult`;
-      break;
-
-    case "Obelisk":
-      details.counter = 0;
-      details.display = () => `x${0.2 * details.counter} mult`;
-      break;
-
-    case "Ride The Bus":
-      details.counter = 0;
-      details.display = () => `+${details.counter} mult`;
-      break;
-
-    case "Square Joker":
-      details.counter = 0;
-      details.display = () => `+${4 * details.counter} chips`;
-      break;
-
-    case "Runner":
-      details.counter = 0;
-      details.display = () => `+${15 * details.counter} chips`;
-      break;
-
-    default:
-      details.name satisfies JokerNameWithoutVars;
-      break;
-  }
-
-  return {
-    id: newId(),
+  const id = newId();
+  const baseJoker = {
+    id,
     chips: 0,
     mult: 0,
     xmult: 1,
-    vars: details,
   };
+
+  if (!name) {
+    return {
+      ...baseJoker,
+      vars: {
+        kind: "simple",
+        name: null,
+      },
+    };
+  }
+
+  switch (name) {
+    case "Ice Cream":
+      return {
+        ...baseJoker,
+        vars: {
+          kind: "counter",
+          name,
+          counter: 20,
+          display: function () {
+            return `+${this.counter} chips`;
+          },
+        },
+      };
+
+    case "Photograph":
+      return {
+        ...baseJoker,
+        vars: {
+          kind: "photograph",
+          name,
+          photograph: false,
+        },
+      };
+
+    case "Green Joker":
+      return {
+        ...baseJoker,
+        vars: {
+          kind: "counter",
+          name,
+          counter: 0,
+          display: function () {
+            return `+${this.counter} mult`;
+          },
+        },
+      };
+
+    case "Obelisk":
+      return {
+        ...baseJoker,
+        vars: {
+          kind: "counter",
+          name,
+          counter: 0,
+          display: function () {
+            return `x${0.2 * this.counter} mult`;
+          },
+        },
+      };
+
+    case "Ride The Bus":
+      return {
+        ...baseJoker,
+        vars: {
+          kind: "counter",
+          name,
+          counter: 0,
+          display: function () {
+            return `+${this.counter} mult`;
+          },
+        },
+      };
+
+    case "Square Joker":
+      return {
+        ...baseJoker,
+        vars: {
+          kind: "counter",
+          name,
+          counter: 0,
+          display: function () {
+            return `+${4 * this.counter} chips`;
+          },
+        },
+      };
+
+    case "Runner":
+      return {
+        ...baseJoker,
+        vars: {
+          kind: "counter",
+          name,
+          counter: 0,
+          display: function () {
+            return `+${15 * this.counter} chips`;
+          },
+        },
+      };
+
+    default:
+      // Type guard to ensure name is a SimpleJokerName
+      if (isSimpleJokerName(name)) {
+        return {
+          ...baseJoker,
+          vars: {
+            kind: "simple",
+            name,
+          },
+        };
+      }
+      // Fallback for unknown names
+      return {
+        ...baseJoker,
+        vars: {
+          kind: "simple",
+          name: null,
+        },
+      };
+  }
+}
+
+// Type guard to check if a string is a SimpleJokerName
+function isSimpleJokerName(name: string): name is SimpleJokerName {
+  // This function checks if the name is in JOKERS but not in the counter jokers or "Photograph"
+  const counterOrPhotographNames: string[] = [
+    "Green Joker",
+    "Ride The Bus",
+    "Obelisk",
+    "Runner",
+    "Square Joker",
+    "Ice Cream",
+    "Photograph",
+  ];
+  return (
+    JOKERS.includes(name as any) && !counterOrPhotographNames.includes(name)
+  );
 }
 
 function newId() {

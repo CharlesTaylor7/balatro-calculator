@@ -1,6 +1,15 @@
 import { create, type ExtractState } from "zustand";
 import { persist, combine } from "zustand/middleware";
-import type { Joker, JokerId, JokerName } from "./calculator";
+import type {
+  Joker,
+  JokerId,
+  JokerName,
+  JokerVariant,
+  CounterJoker,
+  PhotographJoker,
+  SimpleJoker,
+  CounterJokerName,
+} from "./calculator";
 import { newJoker, newHandInfo } from "./calculator";
 
 type Stake = "white" | "green" | "purple";
@@ -21,41 +30,65 @@ export const useAppState = create(
       },
       (set, get) => ({
         setJokers: (jokers: Joker[]) => set({ jokers }),
+
         deleteJoker: (id: JokerId) =>
           set((state) => ({
             jokers: state.jokers.filter((joker) => joker.id !== id),
           })),
+
         pushJoker: (name: JokerName | null) =>
           set((state) => ({
             jokers: [...state.jokers, newJoker(name)],
           })),
-        updateJoker<K extends keyof Joker>(
-          index: number,
-          key: K,
-          value: Joker[K],
-        ) {
+
+        // Type-safe update for joker properties
+        updateJoker: (index: number, key: keyof Joker, value: unknown) => {
           const { jokers } = get();
-          const copy = Array.from(jokers);
-          let updates: Partial<Joker>;
-          if (key === "vars" && typeof value === "object" && "name" in value)
-            updates = newJoker(value.name);
-          else if (key === "vars")
-            // @ts-ignore
-            updates = { vars: { ...copy[index].vars, ...value } };
-          else updates = { [key]: value };
+          if (index < 0 || index >= jokers.length) return;
 
-          console.log("updates", updates);
+          const jokersCopy = [...jokers];
 
-          Object.assign(copy[index], updates);
-          console.log("jokers", copy);
-          set({ jokers: copy });
+          if (key === "vars") {
+            // Handle vars updates based on the joker variant type
+            if (isNameUpdate(value)) {
+              // If changing the joker name, create a new joker
+              jokersCopy[index] = newJoker(value.name);
+            } else {
+              const joker = { ...jokersCopy[index] };
+              const currentVars = joker.vars;
+
+              if (currentVars.kind === "counter" && isCounterUpdate(value)) {
+                // Update counter joker
+                joker.vars = {
+                  ...currentVars,
+                  counter: Number(value.counter),
+                };
+                jokersCopy[index] = joker;
+              } else if (
+                currentVars.kind === "photograph" &&
+                isPhotographUpdate(value)
+              ) {
+                // Update photograph joker
+                joker.vars = {
+                  ...currentVars,
+                  photograph: Boolean(value.photograph),
+                };
+                jokersCopy[index] = joker;
+              }
+            }
+          } else if (key === "chips" || key === "mult" || key === "xmult") {
+            // Handle direct number property updates
+            const joker = { ...jokersCopy[index] };
+            joker[key] = Number(value);
+            jokersCopy[index] = joker;
+          }
+
+          set({ jokers: jokersCopy });
         },
         setHand: (index: number, hand: string) =>
           set((state) => {
-            const rounds = Array.from(state.rounds);
-            console.log("hand", hand);
-            rounds.splice(index, 1, hand);
-            console.log("rounds", rounds);
+            const rounds = [...state.rounds];
+            rounds[index] = hand;
             return { rounds };
           }),
       }),
@@ -65,6 +98,23 @@ export const useAppState = create(
     },
   ),
 );
+
+// Type guards for update operations
+function isNameUpdate(value: unknown): value is { name: string | null } {
+  return typeof value === "object" && value !== null && "name" in value;
+}
+
+function isCounterUpdate(
+  value: unknown,
+): value is { counter: number | string } {
+  return typeof value === "object" && value !== null && "counter" in value;
+}
+
+function isPhotographUpdate(
+  value: unknown,
+): value is { photograph: boolean | string } {
+  return typeof value === "object" && value !== null && "photograph" in value;
+}
 
 function makeArray<T>(length: number, fn: (k: number) => T) {
   return Array.from({ length }, (_, k) => fn(k));

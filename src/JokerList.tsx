@@ -38,8 +38,9 @@ export function JokerList() {
         delay: 200,
         tolerance: 5,
       },
-      canStartDragging: (event: any) => {
-        return !event.target.closest("button");
+      canStartDragging: (event: PointerEvent) => {
+        const target = event.target as HTMLElement;
+        return !target.closest("button");
       },
     }),
     useSensor(KeyboardSensor, {
@@ -49,7 +50,7 @@ export function JokerList() {
 
   const { jokers, pushJoker, setJokers } = useAppState();
 
-  async function handleDragEnd(event: DragEndEvent) {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
     if (!over || active.id === over.id) return;
@@ -106,13 +107,15 @@ function JokerComponent({ joker, index }: JokerProps) {
   const multId = useId();
   const xmultId = useId();
 
-  const name = joker.vars.name;
+  // Get the joker name
+  const jokerName = joker.vars.name || undefined;
+
   return (
     <Card ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <CardHeader className="flex">
         <CardTitle>
           <Select
-            value={name ?? undefined}
+            value={jokerName}
             onValueChange={(name) => updateJoker(index, "vars", { name })}
           >
             <SelectTrigger>
@@ -132,28 +135,40 @@ function JokerComponent({ joker, index }: JokerProps) {
         </Button>
       </CardHeader>
       <CardContent>
-        {joker.vars && "counter" in joker.vars ? (
+        {joker.vars.kind === "counter" && (
           <>
-            <Label htmlFor={chipsId}>Counter</Label>
+            <Label htmlFor={counterId}>Counter</Label>
             <Input
               className="w-20"
               id={counterId}
               type="number"
               value={joker.vars.counter}
               onChange={(e) =>
-                // @ts-ignore
-                updateJoker(index, "vars", { counter: Number(e.target.value) })
+                updateJoker(index, "vars", { counter: e.target.value })
               }
             />
           </>
-        ) : null}
+        )}
+        {joker.vars.kind === "photograph" && (
+          <>
+            <Label htmlFor={counterId}>Photograph</Label>
+            <input
+              id={counterId}
+              type="checkbox"
+              checked={joker.vars.photograph}
+              onChange={(e) =>
+                updateJoker(index, "vars", { photograph: e.target.checked })
+              }
+            />
+          </>
+        )}
         <div className="flex flex-row gap-2 items-center">
           <Label htmlFor={chipsId}>Chips</Label>
           <Input
             className="w-20"
             id={chipsId}
             type="number"
-            defaultValue={joker.chips}
+            value={joker.chips}
             onChange={(e) =>
               updateJoker(index, "chips", Number(e.target.value))
             }
@@ -164,7 +179,7 @@ function JokerComponent({ joker, index }: JokerProps) {
             className="w-20"
             id={multId}
             type="number"
-            defaultValue={joker.mult}
+            value={joker.mult}
             onChange={(e) => updateJoker(index, "mult", Number(e.target.value))}
           />
 
@@ -173,7 +188,7 @@ function JokerComponent({ joker, index }: JokerProps) {
             className="w-20"
             id={xmultId}
             type="number"
-            defaultValue={joker.xmult}
+            value={joker.xmult}
             onChange={(e) =>
               updateJoker(index, "xmult", Number(e.target.value))
             }
