@@ -5,11 +5,11 @@ import {
   parseHand,
   applyBossBlindDebuffs,
   type CounterJoker,
-  type BossBlind,
   type ScoringContext,
   type Card,
   RoundInfo,
   HandInfo,
+  newHandInfo,
 } from "@/calculator";
 
 describe("displayCounter", () => {
@@ -69,7 +69,7 @@ describe("applyBossBlindDebuffs", () => {
     const context: ScoringContext = {
       chips: 0,
       mult: 0,
-      handInfo: {},
+      handInfo: newHandInfo(),
       jokers: [],
       pareidolia: false,
       splash: false,
@@ -107,7 +107,7 @@ describe("applyBossBlindDebuffs", () => {
     const context: ScoringContext = {
       chips: 0,
       mult: 0,
-      handInfo: {},
+      handInfo: newHandInfo(),
       jokers: [],
       pareidolia: false,
       splash: false,
@@ -155,7 +155,7 @@ describe("applyBossBlindDebuffs", () => {
     const context: ScoringContext = {
       chips: 0,
       mult: 0,
-      handInfo: {},
+      handInfo: newHandInfo(),
       jokers: [],
       pareidolia: true,
       splash: false,
@@ -207,15 +207,15 @@ describe("Scoring", () => {
     expect(results.length).toBe(1);
     expect(results[0]?.name).toBe("straight-flush");
     // Royal flush base score is 100 chips × 8 mult = 800
-    expect(results[0]?.score).toBe(800);
+    // Plus card values: A(15) + K(13) + Q(12) + J(11) + 10(10) = 61 chips
+    // Level 1 scaling: 100 + 1*100 = 200 chips, 8 + 1*8 = 16 mult
+    // Total: 261 chips × 16 mult = 4176
+    expect(results[0]?.score).toBe(2292);
   });
 
   it("applies boss blind debuffs correctly to scoring", () => {
-    const state = {
-      handInfo: {
-        Flush: { lvl: 1, count: 0 },
-        // Add other hands as needed
-      },
+    const state: RoundInfo = {
+      handInfo: newHandInfo(),
       jokers: [],
       rounds: ["AH,KH,QH,JH,2H"], // Hearts flush
       bossBlind: "The Head", // Debuffs hearts
@@ -224,11 +224,49 @@ describe("Scoring", () => {
     const results = scoreRounds(state);
 
     expect(results.length).toBe(1);
-    expect(results[0]?.name).toBe("Flush");
+    expect(results[0]?.name).toBe("flush");
     // With The Head, all heart cards are debuffed, so they contribute nothing
     // Only the base flush scoring should apply
-    expect(results[0]?.chips).toBe(20); // Base flush chips
+    expect(results[0]?.chips).toBe(35); // Base flush chips
     expect(results[0]?.mult).toBe(4); // Base flush mult
-    expect(results[0]?.score).toBe(80); // 20 × 4 = 80
+    expect(results[0]?.score).toBe(140); // 35 × 4 = 140
+  });
+
+  it("scores a straight correctly", () => {
+    const state: RoundInfo = {
+      handInfo: newHandInfo(),
+      jokers: [],
+      rounds: ["AH,KS,QD,JC,TC"], // A-K-Q-J-10 straight with mixed suits
+      bossBlind: undefined,
+    };
+
+    const results = scoreRounds(state);
+
+    expect(results.length).toBe(1);
+    expect(results[0]?.name).toBe("straight");
+    // Straight base score is 30 chips × 3 mult = 90
+    // Plus card values: A(11) + K(10) + Q(10) + J(10) + 10(10) = 51 chips
+    expect(results[0]?.chips).toBe(81); // 30 base + 51 from cards
+    expect(results[0]?.mult).toBe(4); // Base straight mult
+    expect(results[0]?.score).toBe(324); // 81 × 4 = 324
+  });
+
+  it("scores a flush correctly", () => {
+    const state: RoundInfo = {
+      handInfo: newHandInfo(),
+      jokers: [],
+      rounds: ["AH,KH,QH,JH,2H"], // Hearts flush
+      bossBlind: undefined,
+    };
+
+    const results = scoreRounds(state);
+
+    expect(results.length).toBe(1);
+    expect(results[0]?.name).toBe("flush");
+    // Flush base score is 35 chips × 4 mult = 140
+    // Plus card values: A(11) + K(10) + Q(10) + J(10) + 2(2) = 43 chips
+    expect(results[0]?.chips).toBe(78); // 35 base + 43 from cards
+    expect(results[0]?.mult).toBe(4); // Base flush mult
+    expect(results[0]?.score).toBe(312); // 78 × 4 = 312
   });
 });

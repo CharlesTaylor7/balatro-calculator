@@ -246,6 +246,23 @@ export function newHandInfo(): HandInfo {
   ) as HandInfo;
 }
 
+/**
+ * Scores a given poker hand based on the provided context.
+ * 
+ * This function processes a poker hand string, applying various scoring rules,
+ * debuffs, and joker effects to calculate the final chip and multiplier values.
+ * It modifies the `context` object to reflect these values and returns
+ * a `Scored` object if a valid hand is identified, otherwise throws an error.
+ * 
+ * @param context - The scoring context that holds current chip and multiplier totals,
+ *                  joker effects, and hand metadata.
+ * @param hand - A string representation of the poker hand to be scored.
+ * 
+ * @returns A `Scored` object containing the name of the hand, final chip total, 
+ *          and multiplier if a valid hand is found; otherwise, null.
+ * 
+ * @throws Error if no matching hand is found.
+ */
 function scoreHand(context: ScoringContext, hand: string): Scored | null {
   context.chips = 0;
   context.mult = 0;
@@ -280,6 +297,10 @@ function scoreHand(context: ScoringContext, hand: string): Scored | null {
         context.mult += card.mult;
         context.mult *= card.xmult;
       }
+    }
+    // Initialize handInfo entry if it doesn't exist
+    if (!context.handInfo[handName]) {
+      context.handInfo[handName] = { lvl: 1, count: 0 };
     }
     context.handInfo[handName].count++;
     // Apply joker effects
@@ -655,7 +676,8 @@ function visitHand(
 }
 
 function scorePokerHand(context: ScoringContext, hand: PokerHand) {
-  const { lvl } = context.handInfo[hand];
+  // Get level from handInfo, defaulting to 1 if not found
+  const lvl = context.handInfo[hand]?.lvl ?? 1;
   // Apply base scoring
   let baseChips = HAND_SCORING[hand].chips;
   let baseMult = HAND_SCORING[hand].mult;
@@ -785,17 +807,26 @@ const HAND_MATCHERS: Record<PokerHand, HandMatcher> = {
       ? hand.cards
       : null,
   straight: (hand) => {
-    if (hand.cards.length !== 5) return;
+    if (hand.cards.length !== 5) return null;
     const sorted = hand.cards
       .map((c) => rankToOrder(c.rank))
-      .toSorted((a, b) => a - b);
-    const isStraight = range(4).every((i) => {
-      // 5 to A straight
-      if (i == 0 && sorted[0] === 14 && sorted[1] === 5) return true;
-      // regular straight
-      return sorted[i] - sorted[i + 1] == 1;
-    });
-    if (isStraight) return hand.cards;
+      .toSorted((a, b) => b - a); // Sort in descending order
+    
+    // Check for A-K-Q-J-10 straight (royal straight)
+    if (sorted[0] === 14 && sorted[1] === 13 && sorted[2] === 12 && sorted[3] === 11 && sorted[4] === 10) {
+      return hand.cards;
+    }
+    
+    // Check for A-5-4-3-2 straight (wheel straight)
+    if (sorted[0] === 14 && sorted[1] === 5 && sorted[2] === 4 && sorted[3] === 3 && sorted[4] === 2) {
+      return hand.cards;
+    }
+    
+    // Check for regular straights
+    const isRegularStraight = range(4).every((i) => sorted[i] === sorted[i + 1] + 1);
+    if (isRegularStraight) return hand.cards;
+    
+    return null;
   },
   "straight-flush": (hand) =>
     HAND_MATCHERS.flush(hand) && HAND_MATCHERS.straight(hand),

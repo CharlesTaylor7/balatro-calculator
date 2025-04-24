@@ -4,11 +4,6 @@ import type {
   Joker,
   JokerId,
   JokerName,
-  JokerVariant,
-  CounterJoker,
-  PhotographJoker,
-  SimpleJoker,
-  CounterJokerName,
   BossBlind,
 } from "./calculator";
 import { newJoker, newHandInfo } from "./calculator";

@@ -143,6 +143,7 @@ function JokerComponent({ joker, index }: JokerProps) {
                 className="w-20"
                 id={counterId}
                 type="number"
+                min={0}
                 value={joker.vars.counter}
                 onChange={(e) =>
                   updateJoker(index, "vars", {
@@ -162,6 +163,7 @@ function JokerComponent({ joker, index }: JokerProps) {
             className="w-20"
             id={chipsId}
             type="number"
+            min={0}
             value={joker.chips}
             onChange={(e) =>
               updateJoker(index, "chips", Number(e.target.value))
@@ -173,6 +175,7 @@ function JokerComponent({ joker, index }: JokerProps) {
             className="w-20"
             id={multId}
             type="number"
+            min={0}
             value={joker.mult}
             onChange={(e) => updateJoker(index, "mult", Number(e.target.value))}
           />
@@ -182,6 +185,7 @@ function JokerComponent({ joker, index }: JokerProps) {
             className="w-20"
             id={xmultId}
             type="number"
+            min={1}
             value={joker.xmult}
             onChange={(e) =>
               updateJoker(index, "xmult", Number(e.target.value))

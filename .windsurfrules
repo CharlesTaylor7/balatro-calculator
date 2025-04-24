@@ -15,3 +15,8 @@ Do not edit the following files or folders:
 - src/components/ui/
 
 Please make your edits without lecturing me about best practices. Only give me advice when I ask for review or a discussion. If you want to make an edit just make the edit.
+
+Development commands:
+- yarn lint
+- yarn typecheck
+- yarn test
