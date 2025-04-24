@@ -95,16 +95,18 @@ export type Suit = "C" | "D" | "H" | "S";
 // W means wild
 export type ExtendedSuit = Suit | "W" | Nullish;
 
-type Card = Readonly<{
+// Base card properties that are readonly
+type Card = {
   // order the cards in the hand will score
   order: number;
   rank: Rank;
   suit: ExtendedSuit;
-
   chips: number;
   mult: number;
   xmult: number;
-}>;
+  debuffed: boolean; 
+};
+
 
 // FUNCTIONS
 export function newJoker(name: string | null): Joker {
@@ -268,10 +270,12 @@ function scoreHand(context: ScoringContext, hand: string): Scored | null {
   context.chips = 0;
   context.mult = 0;
   const cards = parseHand(hand);
-  console.log("cards", cards);
-
+  
   //  nothing matches an empty hand
   if (cards.length === 0) return null;
+
+  // Apply boss blind debuffs to cards
+  applyBossBlindDebuffs(context, cards);
 
   const groups = Object.entries(groupBy(cards, (c) => c.rank)).map((group) => ({
     rank: group[0] as Rank,
@@ -288,19 +292,31 @@ function scoreHand(context: ScoringContext, hand: string): Scored | null {
       : scoring.toSorted((a, b) => a.order - b.order);
 
     scorePokerHand(context, handName);
-    for (const card of scoring) {
-      context.chips += card.chips + rankToChips(card.rank);
-      context.mult += card.mult;
-      context.mult *= card.xmult;
-      for (const joker of context.jokers) {
-        visitCard(context, joker, card);
+
+    // Add base card values (only for non-debuffed cards)
+    for (const card of cards) {
+      if (!card.debuffed) {
+        context.chips += rankToChips(card.rank) + card.chips;
+        context.mult += card.mult;
+        context.mult *= card.xmult;
       }
     }
     context.handInfo[handName].count++;
+    // Apply joker effects
     for (const joker of context.jokers) {
+      // Add base joker values
       context.chips += joker.chips;
       context.mult += joker.mult;
       context.mult *= joker.xmult;
+      
+      // Apply joker effects to each non-debuffed card
+      for (const card of cards) {
+        if (!card.debuffed) {
+          visitCard(context, joker, card);
+        }
+      }
+
+      // Apply joker effects to the hand as a whole
       visitHand(context, joker, { name: handName, cards, groups });
     }
 
@@ -402,7 +418,7 @@ export function parseHand(hand: string): Card[] {
   for (let order = 0; order < rawCards.length; order++) {
     const raw = rawCards[order];
     const match = raw.match(CARD_REGEX);
-    if (!match?.groups) return cards;
+    if (!match?.groups) continue;
     const rank = match.groups["rank"] as Rank;
     const suit = match.groups["suit"] as ExtendedSuit;
     const chips = match.groups["chips"];
@@ -415,6 +431,7 @@ export function parseHand(hand: string): Card[] {
       chips: chips != null ? Number(chips) : 0,
       mult: mult != null ? Number(mult) : 0,
       xmult: xmult != null ? Number(xmult) : 1,
+      debuffed: false, // Initialize all cards as not debuffed
     });
   }
   return cards;
@@ -424,32 +441,45 @@ function isFaceCard(rank: Rank, context: ScoringContext) {
   return rank === "K" || rank === "Q" || rank === "J" || context.pareidolia;
 }
 
-function visitCard(context: ScoringContext, joker: Joker, card: Card) {
-  // Check for boss blind debuffs
-  let isDebuffed = false;
-  
-  if (context.bossBlind) {
+// Apply boss blind debuffs to cards in a hand
+function applyBossBlindDebuffs(context: ScoringContext, cards: Card[]): void {
+  if (!context.bossBlind) return;
+
+  for (const card of cards) {
+    // Check if this card should be debuffed based on the boss blind
     switch (context.bossBlind) {
       case "The Club":
-        isDebuffed = card.suit === "C";
+        if (card.suit === "C") {
+          card.debuffed = true;
+        }
         break;
       case "The Goad":
-        isDebuffed = card.suit === "S";
+        if (card.suit === "S") {
+          card.debuffed = true;
+        }
         break;
       case "The Window":
-        isDebuffed = card.suit === "D";
+        if (card.suit === "D") {
+          card.debuffed = true;
+        }
         break;
       case "The Head":
-        isDebuffed = card.suit === "H";
+        if (card.suit === "H") {
+          card.debuffed = true;
+        }
         break;
       case "The Plant":
-        isDebuffed = card.rank === "J" || card.rank === "Q" || card.rank === "K";
+        if (card.rank === "J" || card.rank === "Q" || card.rank === "K") {
+          card.debuffed = true;
+        }
         break;
     }
   }
-  
-  // If card is debuffed, we skip applying joker effects to it
-  if (isDebuffed) {
+}
+
+function visitCard(context: ScoringContext, joker: Joker, card: Card) {
+  // Skip debuffed cards
+  if (card.debuffed) {
     return;
   }
   switch (joker.vars.name) {

@@ -1,8 +1,9 @@
 Input hand counts and planet card counts
-input current boss blind
 input current plasma deck
 - [x]fix all type errors
 
+- [ ] input current boss blind
+  - QA each one
 
 ## Boss Blinds
 - The Arm: Decrease level of played poker hand by 1 (hand levels can go as low as Level 1, and are reduced before scoring)	
