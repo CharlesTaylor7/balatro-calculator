@@ -25,12 +25,11 @@ type ScoringContext = Score & {
 // Define a discriminated union for joker variants
 export type JokerVariant = CounterJoker | PhotographJoker | SimpleJoker;
 
-// Counter jokers have a counter and display function
+// Counter jokers have a counter
 export interface CounterJoker {
   kind: "counter";
   name: CounterJokerName;
   counter: number;
-  display(): string;
 }
 
 // Photograph joker has a photograph boolean
@@ -136,9 +135,6 @@ export function newJoker(name: string | null): Joker {
           kind: "counter",
           name,
           counter: 20,
-          display: function () {
-            return `+${this.counter} chips`;
-          },
         },
       };
 
@@ -159,9 +155,7 @@ export function newJoker(name: string | null): Joker {
           kind: "counter",
           name,
           counter: 0,
-          display: function () {
-            return `+${this.counter} mult`;
-          },
+    
         },
       };
 
@@ -172,9 +166,6 @@ export function newJoker(name: string | null): Joker {
           kind: "counter",
           name,
           counter: 0,
-          display: function () {
-            return `x${0.2 * this.counter} mult`;
-          },
         },
       };
 
@@ -185,9 +176,6 @@ export function newJoker(name: string | null): Joker {
           kind: "counter",
           name,
           counter: 0,
-          display: function () {
-            return `+${this.counter} mult`;
-          },
         },
       };
 
@@ -198,9 +186,6 @@ export function newJoker(name: string | null): Joker {
           kind: "counter",
           name,
           counter: 0,
-          display: function () {
-            return `+${4 * this.counter} chips`;
-          },
         },
       };
 
@@ -211,9 +196,6 @@ export function newJoker(name: string | null): Joker {
           kind: "counter",
           name,
           counter: 0,
-          display: function () {
-            return `+${15 * this.counter} chips`;
-          },
         },
       };
 
@@ -383,7 +365,7 @@ export function scoreRounds(
     chips: 0,
     mult: 0,
     handInfo: cloneDeep(state.handInfo),
-    jokers: state.jokers,
+    jokers: cloneDeep(state.jokers),
     pareidolia: state.jokers.some((j) => j.vars.name === "Pareidolia"),
     splash: state.jokers.some((j) => j.vars.name === "Splash"),
     bossBlind: state.bossBlind,
@@ -442,6 +424,28 @@ function isFaceCard(rank: Rank, context: ScoringContext) {
 }
 
 // Apply boss blind debuffs to cards in a hand
+// Display function for counter jokers
+export function displayCounter(joker: CounterJoker): string {
+  const { name, counter } = joker;
+  
+  switch (name) {
+    case "Ice Cream":
+      return `+${5 * counter} chips`;
+    case "Green Joker":
+      return `+${counter} mult`;
+    case "Ride The Bus":
+      return `+${counter} mult`;
+    case "Obelisk":
+      return `x${(0.2 * counter).toFixed(1)} mult`;
+    case "Square Joker":
+      return `+${4 * counter} chips`;
+    case "Runner":
+      return `+${15 * counter} chips`;
+    default:
+      return `${counter}`;
+  }
+}
+
 function applyBossBlindDebuffs(context: ScoringContext, cards: Card[]): void {
   if (!context.bossBlind) return;
 
@@ -449,27 +453,32 @@ function applyBossBlindDebuffs(context: ScoringContext, cards: Card[]): void {
     // Check if this card should be debuffed based on the boss blind
     switch (context.bossBlind) {
       case "The Club":
-        if (card.suit === "C") {
+        // Debuff if suit is Club, Wild, or null/undefined (unknown)
+        if (card.suit === "C" || card.suit === "W" || card.suit == null) {
           card.debuffed = true;
         }
         break;
       case "The Goad":
-        if (card.suit === "S") {
+        // Debuff if suit is Spade, Wild, or null/undefined (unknown)
+        if (card.suit === "S" || card.suit === "W" || card.suit == null) {
           card.debuffed = true;
         }
         break;
       case "The Window":
-        if (card.suit === "D") {
+        // Debuff if suit is Diamond, Wild, or null/undefined (unknown)
+        if (card.suit === "D" || card.suit === "W" || card.suit == null) {
           card.debuffed = true;
         }
         break;
       case "The Head":
-        if (card.suit === "H") {
+        // Debuff if suit is Heart, Wild, or null/undefined (unknown)
+        if (card.suit === "H" || card.suit === "W" || card.suit == null) {
           card.debuffed = true;
         }
         break;
       case "The Plant":
-        if (card.rank === "J" || card.rank === "Q" || card.rank === "K") {
+        // Debuff if card is a face card (J, Q, K) or if pareidolia is active
+        if (isFaceCard(card.rank, context)) {
           card.debuffed = true;
         }
         break;

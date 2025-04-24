@@ -11,7 +11,7 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { Joker, JOKERS } from "@/calculator";
+import { Joker, JOKERS, displayCounter } from "@/calculator";
 import {
   DndContext,
   closestCenter,
@@ -45,7 +45,7 @@ export function JokerList() {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    }),
+    })
   );
 
   const { jokers, pushJoker, setJokers } = useAppState();
@@ -136,20 +136,26 @@ function JokerComponent({ joker, index }: JokerProps) {
       </CardHeader>
       <CardContent>
         {joker.vars.kind === "counter" && (
-          <>
-            <Label htmlFor={counterId}>Counter</Label>
-            <Input
-              className="w-20"
-              id={counterId}
-              type="number"
-              value={joker.vars.counter}
-              onChange={(e) =>
-                updateJoker(index, "vars", { counter: e.target.value })
-              }
-            />
-          </>
+          <div className="mb-3">
+            <div className="flex flex-row gap-2 items-center mb-1">
+              <Label htmlFor={counterId}>Counter</Label>
+              <Input
+                className="w-20"
+                id={counterId}
+                type="number"
+                value={joker.vars.counter}
+                onChange={(e) =>
+                  updateJoker(index, "vars", {
+                    counter: Number(e.target.value),
+                  })
+                }
+              />
+            </div>
+            <div className="text-sm font-medium text-muted-foreground">
+              {displayCounter(joker.vars)}
+            </div>
+          </div>
         )}
-        {/* Photograph joker has no UI controls */}
         <div className="flex flex-row gap-2 items-center">
           <Label htmlFor={chipsId}>Chips</Label>
           <Input

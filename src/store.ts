@@ -95,6 +95,13 @@ export const useAppState = create(
           }),
 
         setBossBlind: (bossBlind: BossBlind | undefined) => set({ bossBlind }),
+
+        updateHandInfo: (hand: PokerHand, field: "lvl" | "count", value: number) => 
+          set(state => {
+            const newHandInfo = { ...state.handInfo };
+            newHandInfo[hand][field] = value;
+            return { handInfo: newHandInfo };
+          }),
       }),
     ),
     {
