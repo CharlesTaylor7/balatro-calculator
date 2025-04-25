@@ -816,7 +816,7 @@ const HAND_MATCHERS: Record<PokerHand, HandMatcher> = {
     if (hand.cards.length !== 5) return null;
     const sorted = hand.cards
       .map((c) => rankToOrder(c.rank))
-      .toSorted((a, b) => b - a); // Sort in descending order
+      .toSorted((a, b) => b - a); 
     
     // Check for A-5-4-3-2 straight (wheel straight)
     if (sorted[0] === 14 && sorted[1] === 5 && sorted[2] === 4 && sorted[3] === 3 && sorted[4] === 2) {

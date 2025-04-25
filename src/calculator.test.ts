@@ -270,4 +270,37 @@ describe("Scoring", () => {
     expect(results[0]?.mult).toBe(4); // Base flush mult
     expect(results[0]?.score).toBe(312); // 78 × 4 = 312
   });
+
+  it("scores 5 wild cards as a flush", () => {
+    const state: RoundInfo = {
+      handInfo: newHandInfo(),
+      jokers: [],
+      rounds: ["AW,KW,QW,3W,5W"], // All wild cards but not a straight
+      bossBlind: undefined,
+    };
+
+    const results = scoreRounds(state);
+
+    expect(results.length).toBe(1);
+    expect(results[0]?.name).toBe("flush");
+    // Flush base score is 35 chips × 4 mult = 140
+    // Plus card values: A(11) + K(10) + Q(10) + 3(3) + 5(5) = 39 chips
+    expect(results[0]?.chips).toBe(74); // 35 base + 39 from cards
+    expect(results[0]?.mult).toBe(4); // Base flush mult
+    expect(results[0]?.score).toBe(296); // 74 × 4 = 296
+  });
+
+  it("does not score a hand with unknown suits as a flush", () => {
+    const state: RoundInfo = {
+      handInfo: newHandInfo(),
+      jokers: [],
+      rounds: ["A,KH,QH,3H,5H"], // First card has unknown suit, others are hearts
+      bossBlind: undefined,
+    };
+
+    const results = scoreRounds(state);
+
+    expect(results.length).toBe(1);
+    expect(results[0]?.name).toBe("high-card");
+  });
 });
