@@ -97,7 +97,12 @@ export const useAppState = create(
         updateHandInfo: (hand: PokerHand, field: "lvl" | "count", value: number) => 
           set(state => {
             const newHandInfo = { ...state.handInfo };
-            newHandInfo[hand][field] = value;
+            // Ensure level is never less than 1
+            if (field === "lvl") {
+              newHandInfo[hand][field] = Math.max(1, value);
+            } else {
+              newHandInfo[hand][field] = value;
+            }
             return { handInfo: newHandInfo };
           }),
       }),

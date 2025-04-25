@@ -10,7 +10,13 @@ export function HandCountTable() {
 
   // Handle hand count changes
   const handleHandCountChange = (hand: PokerHand, value: string, field: "lvl" | "count") => {
-    const numValue = parseInt(value) || 0;
+    let numValue = parseInt(value) || 0;
+    
+    // Ensure level is never less than 1
+    if (field === "lvl") {
+      numValue = Math.max(1, numValue);
+    }
+    
     updateHandInfo(hand, field, numValue);
   };
 
@@ -19,7 +25,7 @@ export function HandCountTable() {
     // Reset hand counts
     Object.keys(handInfo).forEach(hand => {
       // eslint-disable-next-line no-type-assertion/no-type-assertion
-      updateHandInfo(hand as PokerHand, "lvl", 0);
+      updateHandInfo(hand as PokerHand, "lvl", 1);
       // eslint-disable-next-line no-type-assertion/no-type-assertion
       updateHandInfo(hand as PokerHand, "count", 0);
     });
@@ -51,7 +57,7 @@ export function HandCountTable() {
                 <TableCell>
                   <Input
                     type="number"
-                    min="0"
+                    min="1"
                     className="w-16"
                     value={info.lvl}
                     onChange={(e) => {

@@ -20,6 +20,7 @@ export type ScoringContext = Score & {
   pareidolia: boolean;
   splash: boolean;
   bossBlind?: BossBlind;
+  playedHandTypes: Set<PokerHand>; // Track played hand types for The Eye and The Mouth
 };
 
 // Define a discriminated union for joker variants
@@ -240,11 +241,19 @@ function newId() {
   return Math.random().toString(36).slice(2);
 }
 
-export function newHandInfo(): HandInfo {
+export function newHandInfo(partialHandInfo?: Partial<HandInfo>): HandInfo {
+  // Create base hand info with all hands at level 1
   // eslint-disable-next-line no-type-assertion/no-type-assertion
-  return Object.fromEntries(
-    HANDS.map((h) => [h, { lvl: 0, count: 0 }])
+  const baseHandInfo = Object.fromEntries(
+    HANDS.map((h) => [h, { lvl: 1, count: 0 }])
   ) as HandInfo;
+  
+  // If partial hand info is provided, merge it with the base
+  if (partialHandInfo) {
+    return { ...baseHandInfo, ...partialHandInfo };
+  }
+  
+  return baseHandInfo;
 }
 
 /**
@@ -259,75 +268,94 @@ export function newHandInfo(): HandInfo {
  *                  joker effects, and hand metadata.
  * @param hand - A string representation of the poker hand to be scored.
  * 
- * @returns A `Scored` object containing the name of the hand, final chip total, 
+ * @returns A `Scored` object containing the final hand name, chip value,
  *          and multiplier if a valid hand is found; otherwise, null.
  * 
  * @throws Error if no matching hand is found.
  */
-function scoreHand(context: ScoringContext, hand: string): Scored | null {
-  context.chips = 0;
-  context.mult = 0;
+export function scoreHand(context: ScoringContext, hand: string): Scored | null {
+  // Parse the hand string into cards
   const cards = parseHand(hand);
-
-  //  nothing matches an empty hand
-  if (cards.length === 0) return null;
+  
+  // Check for The Psychic boss blind (must play 5 cards)
+  if (context.bossBlind === "The Psychic" && cards.length < 5) {
+    return null;
+  }
 
   // Apply boss blind debuffs to cards
   applyBossBlindDebuffs(context, cards);
 
-  const groups = Object.entries(groupBy(cards, (c) => c.rank)).map((group) => ({
-    // eslint-disable-next-line no-type-assertion/no-type-assertion
-    rank: group[0] as Rank,
-    cards: group[1],
-  }));
+  // Group cards by rank for hand detection
+  const groups = Object.values(
+    groupBy(cards, (card) => card.rank)
+  ).map((cards) => ({ rank: cards[0].rank, cards }));
 
+  // Sort groups by size (descending) then by rank value (descending)
+  groups.sort((a, b) => {
+    const sizeA = a.cards.length;
+    const sizeB = b.cards.length;
+    if (sizeA !== sizeB) return sizeB - sizeA;
+    return rankToOrder(b.rank) - rankToOrder(a.rank);
+  });
+
+  // Try to match the hand against known poker hands
   for (const handName of HANDS) {
-    let scoring = HAND_MATCHERS[handName]({ cards, groups });
-    if (scoring == null) continue;
-
-    // splash uses all the cards in the initial order
-    scoring = context.splash
-      ? cards
-      : scoring.toSorted((a, b) => a.order - b.order);
-
-    scorePokerHand(context, handName);
-
-    // Add base card values (only for non-debuffed cards)
-    for (const card of cards) {
-      if (!card.debuffed) {
-        context.chips += rankToChips(card.rank) + card.chips;
-        context.mult += card.mult;
-        context.mult *= card.xmult;
+    const handCards = HAND_MATCHERS[handName]({ cards, groups });
+    if (handCards) {
+      // Check for The Eye boss blind (no repeat hand types)
+      if (context.bossBlind === "The Eye" && context.playedHandTypes.has(handName)) {
+        return null;
       }
-    }
-    // Initialize handInfo entry if it doesn't exist
-    if (!context.handInfo[handName]) {
-      context.handInfo[handName] = { lvl: 1, count: 0 };
-    }
-    context.handInfo[handName].count++;
-    // Apply joker effects
-    for (const joker of context.jokers) {
-      // Add base joker values
-      context.chips += joker.chips;
-      context.mult += joker.mult;
-      context.mult *= joker.xmult;
+      
+      // Check for The Mouth boss blind (only one hand type allowed)
+      if (context.bossBlind === "The Mouth" && 
+          context.playedHandTypes.size > 0 && 
+          !context.playedHandTypes.has(handName)) {
+        return null;
+      }
+      
+      // Add this hand type to the played types
+      context.playedHandTypes.add(handName);
+      
+      // Update hand count in context
+      context.handInfo[handName].count++;
 
-      // Apply joker effects to each non-debuffed card
+      // Apply base scoring for the hand
+      scorePokerHand(context, handName);
+
+      // Add card values to chips (only for non-debuffed cards)
       for (const card of cards) {
         if (!card.debuffed) {
-          visitCard(context, joker, card);
+          context.chips += rankToChips(card.rank) + card.chips;
+          context.mult += card.mult;
+          context.mult *= card.xmult;
         }
       }
 
-      // Apply joker effects to the hand as a whole
-      visitHand(context, joker, { name: handName, cards, groups });
-    }
+      // Apply joker effects
+      for (const joker of context.jokers) {
+        // Add base joker values
+        context.chips += joker.chips;
+        context.mult += joker.mult;
+        context.mult *= joker.xmult;
 
-    return {
-      name: handName,
-      chips: context.chips,
-      mult: context.mult,
-    };
+        // Apply joker effects to each non-debuffed card
+        for (const card of cards) {
+          if (!card.debuffed) {
+            visitCard(context, joker, card);
+          }
+        }
+
+        // Apply joker effects to the hand as a whole
+        visitHand(context, joker, { name: handName, cards, groups });
+      }
+
+      return {
+        name: handName,
+        chips: context.chips,
+        mult: context.mult,
+      };
+    }
   }
   throw new Error("no matching hand");
 }
@@ -392,6 +420,7 @@ export function scoreRounds(state: RoundInfo): (Hand | null)[] {
     pareidolia: state.jokers.some((j) => j.vars.name === "Pareidolia"),
     splash: state.jokers.some((j) => j.vars.name === "Splash"),
     bossBlind: state.bossBlind,
+    playedHandTypes: new Set<PokerHand>(), // Track played hand types for The Eye and The Mouth
   };
 
   const hands: (Hand | null)[] = [];
