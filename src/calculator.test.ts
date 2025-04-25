@@ -207,10 +207,10 @@ describe("Scoring", () => {
     expect(results.length).toBe(1);
     expect(results[0]?.name).toBe("straight-flush");
     // Royal flush base score is 100 chips × 8 mult = 800
-    // Plus card values: A(15) + K(13) + Q(12) + J(11) + 10(10) = 61 chips
-    // Level 1 scaling: 100 + 1*100 = 200 chips, 8 + 1*8 = 16 mult
-    // Total: 261 chips × 16 mult = 4176
-    expect(results[0]?.score).toBe(2292);
+    // Plus card values: A(11) + K(10) + Q(10) + J(10) + T(10) = 51 chips
+    // Level 1 scaling: 100 + 0*40 = 100 chips, 8 + 0*4 = 8 mult
+    // Total: 151 chips × 8 mult = 1208
+    expect(results[0]?.score).toBe(1208);
   });
 
   it("applies boss blind debuffs correctly to scoring", () => {
