@@ -245,38 +245,41 @@ export function newHandInfo(partialHandInfo?: Partial<HandInfo>): HandInfo {
   // Create base hand info with all hands at level 1
   // eslint-disable-next-line no-type-assertion/no-type-assertion
   const baseHandInfo = Object.fromEntries(
-    HANDS.map((h) => [h, { lvl: 1, count: 0 }])
+    HANDS.map((h) => [h, { lvl: 1, count: 0 }]),
   ) as HandInfo;
-  
+
   // If partial hand info is provided, merge it with the base
   if (partialHandInfo) {
     return { ...baseHandInfo, ...partialHandInfo };
   }
-  
+
   return baseHandInfo;
 }
 
 /**
  * Scores a given poker hand based on the provided context.
- * 
+ *
  * This function processes a poker hand string, applying various scoring rules,
  * debuffs, and joker effects to calculate the final chip and multiplier values.
  * It modifies the `context` object to reflect these values and returns
  * a `Scored` object if a valid hand is identified, otherwise throws an error.
- * 
+ *
  * @param context - The scoring context that holds current chip and multiplier totals,
  *                  joker effects, and hand metadata.
  * @param hand - A string representation of the poker hand to be scored.
- * 
+ *
  * @returns A `Scored` object containing the final hand name, chip value,
  *          and multiplier if a valid hand is found; otherwise, null.
- * 
+ *
  * @throws Error if no matching hand is found.
  */
-export function scoreHand(context: ScoringContext, hand: string): Scored | null {
+export function scoreHand(
+  context: ScoringContext,
+  hand: string,
+): Scored | null {
   // Parse the hand string into cards
   const cards = parseHand(hand);
-  
+
   // Check for The Psychic boss blind (must play 5 cards)
   if (context.bossBlind === "The Psychic" && cards.length < 5) {
     return null;
@@ -286,9 +289,9 @@ export function scoreHand(context: ScoringContext, hand: string): Scored | null 
   applyBossBlindDebuffs(context, cards);
 
   // Group cards by rank for hand detection
-  const groups = Object.values(
-    groupBy(cards, (card) => card.rank)
-  ).map((cards) => ({ rank: cards[0].rank, cards }));
+  const groups = Object.values(groupBy(cards, (card) => card.rank)).map(
+    (cards) => ({ rank: cards[0].rank, cards }),
+  );
 
   // Sort groups by size (descending) then by rank value (descending)
   groups.sort((a, b) => {
@@ -303,20 +306,25 @@ export function scoreHand(context: ScoringContext, hand: string): Scored | null 
     const handCards = HAND_MATCHERS[handName]({ cards, groups });
     if (handCards) {
       // Check for The Eye boss blind (no repeat hand types)
-      if (context.bossBlind === "The Eye" && context.playedHandTypes.has(handName)) {
+      if (
+        context.bossBlind === "The Eye" &&
+        context.playedHandTypes.has(handName)
+      ) {
         return null;
       }
-      
+
       // Check for The Mouth boss blind (only one hand type allowed)
-      if (context.bossBlind === "The Mouth" && 
-          context.playedHandTypes.size > 0 && 
-          !context.playedHandTypes.has(handName)) {
+      if (
+        context.bossBlind === "The Mouth" &&
+        context.playedHandTypes.size > 0 &&
+        !context.playedHandTypes.has(handName)
+      ) {
         return null;
       }
-      
+
       // Add this hand type to the played types
       context.playedHandTypes.add(handName);
-      
+
       // Update hand count in context
       context.handInfo[handName].count++;
 
@@ -502,7 +510,7 @@ export function displayCounter(joker: CounterJoker): string {
 
 export function applyBossBlindDebuffs(
   context: ScoringContext,
-  cards: Card[]
+  cards: Card[],
 ): void {
   if (!context.bossBlind) return;
 
@@ -621,7 +629,7 @@ function visitCard(context: ScoringContext, joker: Joker, card: Card) {
 function visitHand(
   context: ScoringContext,
   joker: Joker,
-  hand: HandNameAndDetails
+  hand: HandNameAndDetails,
 ) {
   switch (joker.vars.name) {
     case "Green Joker":
@@ -638,7 +646,7 @@ function visitHand(
     case "Obelisk": {
       const handCounts = Object.entries(context.handInfo).map(
         // eslint-disable-next-line no-type-assertion/no-type-assertion
-        ([h, o]) => [h, o.count] as [PokerHand, number]
+        ([h, o]) => [h, o.count] as [PokerHand, number],
       );
       const max = Math.max(...handCounts.map((x) => x[1]));
       const mostPlayed = handCounts
@@ -710,21 +718,16 @@ function visitHand(
 }
 
 function scorePokerHand(context: ScoringContext, hand: PokerHand) {
-  // Get level from handInfo, defaulting to 1 if not found
-  const lvl = context.handInfo[hand]?.lvl ?? 1;
-  // Apply base scoring
+  let lvl = context.handInfo[hand].lvl;
   let baseChips = HAND_SCORING[hand].chips;
   let baseMult = HAND_SCORING[hand].mult;
-
-  // Apply level scaling
-  let effectiveLevel = lvl;
 
   // Apply boss blind effects
   if (context.bossBlind) {
     switch (context.bossBlind) {
       case "The Arm":
         // Decrease level by 1 (minimum 1)
-        effectiveLevel = Math.max(1, effectiveLevel - 1);
+        lvl = Math.max(1, lvl - 1);
         break;
       case "The Flint":
         // Base chips and mult are halved
@@ -735,9 +738,11 @@ function scorePokerHand(context: ScoringContext, hand: PokerHand) {
       // They would be applied during card processing
     }
   }
+  // Apply level scaling
+  let scaling = lvl - 1;
 
-  context.chips += baseChips + effectiveLevel * HAND_SCALING[hand].chips;
-  context.mult += baseMult + effectiveLevel * HAND_SCALING[hand].mult;
+  context.chips += baseChips + scaling * HAND_SCALING[hand].chips;
+  context.mult += baseMult + scaling * HAND_SCALING[hand].mult;
 }
 
 // Boss Blind Types
@@ -837,7 +842,7 @@ const HAND_MATCHERS: Record<PokerHand, HandMatcher> = {
     hand.cards.every((c) => c.suit != null) &&
     hand.cards.every(
       (c) =>
-        c.suit == "W" || c.suit == hand.cards.find((c) => c.suit != "W")?.suit
+        c.suit == "W" || c.suit == hand.cards.find((c) => c.suit != "W")?.suit,
     )
       ? hand.cards
       : null,
@@ -845,16 +850,24 @@ const HAND_MATCHERS: Record<PokerHand, HandMatcher> = {
     if (hand.cards.length !== 5) return null;
     const sorted = hand.cards
       .map((c) => rankToOrder(c.rank))
-      .toSorted((a, b) => b - a); 
-    
+      .toSorted((a, b) => b - a);
+
     // Check for A-5-4-3-2 straight (wheel straight)
-    if (sorted[0] === 14 && sorted[1] === 5 && sorted[2] === 4 && sorted[3] === 3 && sorted[4] === 2) {
+    if (
+      sorted[0] === 14 &&
+      sorted[1] === 5 &&
+      sorted[2] === 4 &&
+      sorted[3] === 3 &&
+      sorted[4] === 2
+    ) {
       return hand.cards;
     }
-    
-    const isRegularStraight = range(4).every((i) => sorted[i] === sorted[i + 1] + 1);
+
+    const isRegularStraight = range(4).every(
+      (i) => sorted[i] === sorted[i + 1] + 1,
+    );
     if (isRegularStraight) return hand.cards;
-    
+
     return null;
   },
   "straight-flush": (hand) =>
