@@ -718,28 +718,26 @@ function visitHand(
 }
 
 function scorePokerHand(context: ScoringContext, hand: PokerHand) {
-  let lvl = context.handInfo[hand].lvl;
   let baseChips = HAND_SCORING[hand].chips;
   let baseMult = HAND_SCORING[hand].mult;
 
-  // Apply boss blind effects
   if (context.bossBlind) {
     switch (context.bossBlind) {
       case "The Arm":
-        // Decrease level by 1 (minimum 1)
-        lvl = Math.max(1, lvl - 1);
+        // Decrease hand level by 1
+        context.handInfo[hand].lvl = Math.max(
+          1,
+          context.handInfo[hand].lvl - 1,
+        );
         break;
       case "The Flint":
         // Base chips and mult are halved
         baseChips = Math.floor(baseChips / 2);
         baseMult = Math.floor(baseMult / 2);
         break;
-      // Other boss blinds affect cards, not the hand scoring directly
-      // They would be applied during card processing
     }
   }
-  // Apply level scaling
-  let scaling = lvl - 1;
+  let scaling = context.handInfo[hand].lvl - 1;
 
   context.chips += baseChips + scaling * HAND_SCALING[hand].chips;
   context.mult += baseMult + scaling * HAND_SCALING[hand].mult;
