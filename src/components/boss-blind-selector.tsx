@@ -18,7 +18,10 @@ export function BossBlindSelector() {
         <Label htmlFor="boss-blind">Boss Blind:</Label>
         <Select
           value={bossBlind || "none"}
-          onValueChange={(value) => setBossBlind(value === "none" ? undefined : (value as BossBlind))}
+          onValueChange={(value) => {
+            // eslint-disable-next-line no-type-assertion/no-type-assertion
+            setBossBlind(value === "none" ? undefined : (value as BossBlind))
+          }}
         >
           <SelectTrigger id="boss-blind" className="w-[200px]">
             <SelectValue placeholder="Select a boss blind" />

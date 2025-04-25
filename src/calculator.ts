@@ -241,6 +241,7 @@ function newId() {
 }
 
 export function newHandInfo(): HandInfo {
+  // eslint-disable-next-line no-type-assertion/no-type-assertion
   return Object.fromEntries(
     HANDS.map((h) => [h, { lvl: 0, count: 0 }])
   ) as HandInfo;
@@ -275,6 +276,7 @@ function scoreHand(context: ScoringContext, hand: string): Scored | null {
   applyBossBlindDebuffs(context, cards);
 
   const groups = Object.entries(groupBy(cards, (c) => c.rank)).map((group) => ({
+    // eslint-disable-next-line no-type-assertion/no-type-assertion
     rank: group[0] as Rank,
     cards: group[1],
   }));
@@ -422,7 +424,9 @@ export function parseHand(hand: string): Card[] {
     const raw = rawCards[order];
     const match = raw.match(CARD_REGEX);
     if (!match?.groups) continue;
+    // eslint-disable-next-line no-type-assertion/no-type-assertion
     const rank = match.groups["rank"] as Rank;
+    // eslint-disable-next-line no-type-assertion/no-type-assertion
     const suit = match.groups["suit"] as ExtendedSuit;
     const chips = match.groups["chips"];
     const mult = match.groups["mult"];
@@ -604,6 +608,7 @@ function visitHand(
       return;
     case "Obelisk": {
       const handCounts = Object.entries(context.handInfo).map(
+        // eslint-disable-next-line no-type-assertion/no-type-assertion
         ([h, o]) => [h, o.count] as [PokerHand, number]
       );
       const max = Math.max(...handCounts.map((x) => x[1]));
@@ -771,6 +776,7 @@ const HANDS = [
 const HAND_MATCHERS: Record<PokerHand, HandMatcher> = {
   "high-card": (hand) => {
     if (hand.cards.length === 0) return null;
+    // eslint-disable-next-line no-type-assertion/no-type-assertion
     return [maxBy(hand.cards, (c) => rankToChips(c.rank))!];
   },
   pair: (hand) => hand.groups.find((g) => g.cards.length == 2)?.cards,

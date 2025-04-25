@@ -19,10 +19,13 @@ export const useAppState = create(
   persist(
     combine(
       {
+        // eslint-disable-next-line no-type-assertion/no-type-assertion
         jokers: [] as Joker[],
         rounds: makeArray(4, () => ""),
         handInfo: newHandInfo(),
+        // eslint-disable-next-line no-type-assertion/no-type-assertion
         stake: "white" as Stake,
+        // eslint-disable-next-line no-type-assertion/no-type-assertion
         bossBlind: undefined as BossBlind | undefined,
       },
       (set, get) => ({

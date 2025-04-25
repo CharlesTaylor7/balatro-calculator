@@ -194,6 +194,7 @@ describe("applyBossBlindDebuffs", () => {
 describe("Scoring", () => {
   it("scores a royal flush correctly", () => {
     const state: RoundInfo = {
+      // eslint-disable-next-line no-type-assertion/no-type-assertion
       handInfo: {
         "straight-flush": { lvl: 1, count: 0 },
       } as HandInfo,

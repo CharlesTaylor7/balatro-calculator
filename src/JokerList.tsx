@@ -39,6 +39,7 @@ export function JokerList() {
         tolerance: 5,
       },
       canStartDragging: (event: PointerEvent) => {
+        // eslint-disable-next-line no-type-assertion/no-type-assertion
         const target = event.target as HTMLElement;
         return !target.closest("button");
       },

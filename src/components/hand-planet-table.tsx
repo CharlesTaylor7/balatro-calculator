@@ -18,7 +18,9 @@ export function HandCountTable() {
   const resetCounts = () => {
     // Reset hand counts
     Object.keys(handInfo).forEach(hand => {
+      // eslint-disable-next-line no-type-assertion/no-type-assertion
       updateHandInfo(hand as PokerHand, "lvl", 0);
+      // eslint-disable-next-line no-type-assertion/no-type-assertion
       updateHandInfo(hand as PokerHand, "count", 0);
     });
   };
@@ -52,7 +54,10 @@ export function HandCountTable() {
                     min="0"
                     className="w-16"
                     value={info.lvl}
-                    onChange={(e) => handleHandCountChange(hand as PokerHand, e.target.value, "lvl")}
+                    onChange={(e) => {
+                      // eslint-disable-next-line no-type-assertion/no-type-assertion
+                      handleHandCountChange(hand as PokerHand, e.target.value, "lvl")
+                    }}
                   />
                 </TableCell>
                 <TableCell>
@@ -61,7 +66,10 @@ export function HandCountTable() {
                     min="0"
                     className="w-16"
                     value={info.count}
-                    onChange={(e) => handleHandCountChange(hand as PokerHand, e.target.value, "count")}
+                    onChange={(e) => {
+                      // eslint-disable-next-line no-type-assertion/no-type-assertion
+                      handleHandCountChange(hand as PokerHand, e.target.value, "count")
+                    }}
                   />
                 </TableCell>
               </TableRow>
