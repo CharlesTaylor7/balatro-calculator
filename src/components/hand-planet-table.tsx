@@ -72,8 +72,8 @@ export function HandCountTable() {
                     className="w-16"
                     value={info.lvl}
                     onChange={(e) => {
-                      // eslint-disable-next-line no-type-assertion/no-type-assertion
                       handleHandCountChange(
+                        // eslint-disable-next-line no-type-assertion/no-type-assertion
                         hand as PokerHand,
                         e.target.value,
                         "lvl",
@@ -88,8 +88,8 @@ export function HandCountTable() {
                     className="w-16"
                     value={info.count}
                     onChange={(e) => {
-                      // eslint-disable-next-line no-type-assertion/no-type-assertion
                       handleHandCountChange(
+                        // eslint-disable-next-line no-type-assertion/no-type-assertion
                         hand as PokerHand,
                         e.target.value,
                         "count",

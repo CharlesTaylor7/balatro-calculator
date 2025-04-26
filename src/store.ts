@@ -1,11 +1,17 @@
 import { create } from "zustand";
 import { persist, combine } from "zustand/middleware";
-import type { Joker, JokerId, JokerName, BossBlind, HandInfo , PokerHand} from "@/calculator";
+import type {
+  Joker,
+  JokerId,
+  JokerName,
+  BossBlind,
+  HandInfo,
+  PokerHand,
+} from "@/calculator";
 import { newJoker, newHandInfo } from "@/calculator";
 
 type Stake = "white" | "green" | "purple";
 
-// eslint-disable-next-line no-type-assertion/no-type-assertion
 export type State = {
   jokers: Joker[];
   rounds: string[];
@@ -21,6 +27,7 @@ export type State = {
 export const useAppState = create(
   persist(
     combine(
+      // eslint-disable-next-line no-type-assertion/no-type-assertion
       {
         jokers: [],
         rounds: makeArray(4, () => ""),
