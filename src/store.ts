@@ -1,10 +1,18 @@
-import { create, type ExtractState } from "zustand";
+import { create } from "zustand";
 import { persist, combine } from "zustand/middleware";
-import type { Joker, JokerId, JokerName, BossBlind } from "./calculator";
-import { newJoker, newHandInfo } from "./calculator";
+import type { Joker, JokerId, JokerName, BossBlind, HandInfo , PokerHand} from "@/calculator";
+import { newJoker, newHandInfo } from "@/calculator";
 
 type Stake = "white" | "green" | "purple";
-export type State = ExtractState<typeof useAppState>;
+
+// eslint-disable-next-line no-type-assertion/no-type-assertion
+export type State = {
+  jokers: Joker[];
+  rounds: string[];
+  handInfo: HandInfo;
+  stake: Stake;
+  bossBlind?: BossBlind;
+};
 
 // TODO:
 // configuration:
@@ -14,15 +22,11 @@ export const useAppState = create(
   persist(
     combine(
       {
-        // eslint-disable-next-line no-type-assertion/no-type-assertion
-        jokers: [] as Joker[],
+        jokers: [],
         rounds: makeArray(4, () => ""),
         handInfo: newHandInfo(),
-        // eslint-disable-next-line no-type-assertion/no-type-assertion
-        stake: "white" as Stake,
-        // eslint-disable-next-line no-type-assertion/no-type-assertion
-        bossBlind: null as BossBlind | null,
-      },
+        stake: "white",
+      } as State,
       (set, get) => ({
         setJokers: (jokers: Joker[]) => set({ jokers }),
 

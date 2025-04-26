@@ -183,7 +183,6 @@ describe("Scoring", () => {
       }),
       jokers: [],
       rounds: ["AH,KH,QH,JH,TH"],
-      bossBlind: null,
     };
 
     const results = scoreRounds(state);
@@ -221,7 +220,6 @@ describe("Scoring", () => {
       handInfo: newHandInfo(),
       jokers: [],
       rounds: ["AH,KS,QD,JC,TC"], // A-K-Q-J-10 straight with mixed suits
-      bossBlind: null,
     };
 
     const results = scoreRounds(state);
@@ -240,7 +238,6 @@ describe("Scoring", () => {
       handInfo: newHandInfo(),
       jokers: [],
       rounds: ["AH,KH,QH,JH,2H"], // Hearts flush
-      bossBlind: undefined,
     };
 
     const results = scoreRounds(state);
@@ -259,7 +256,6 @@ describe("Scoring", () => {
       handInfo: newHandInfo(),
       jokers: [],
       rounds: ["AW,KW,QW,3W,5W"], // All wild cards but not a straight
-      bossBlind: undefined,
     };
 
     const results = scoreRounds(state);
@@ -278,7 +274,6 @@ describe("Scoring", () => {
       handInfo: newHandInfo(),
       jokers: [],
       rounds: ["A,KH,QH,3H,5H"], // First card has unknown suit, others are hearts
-      bossBlind: undefined,
     };
 
     const results = scoreRounds(state);
@@ -504,13 +499,12 @@ describe("Boss Blind Effects", () => {
 });
 
 describe("Splash Joker", () => {
-  it.only("allows all cards to contribute to scoring when Splash joker is present", () => {
+  it("allows all cards to contribute to scoring when Splash joker is present", () => {
     // Setup a hand with a pair of 10s and other cards that wouldn't normally score
     const state: RoundInfo = {
       handInfo: newHandInfo(),
       jokers: [newJoker("Splash")],
       rounds: ["10H,10S,2C,3D,4H"], // Pair of 10s with unrelated cards
-      bossBlind: null,
     };
 
     // Same hand but without Splash joker for comparison
@@ -518,7 +512,6 @@ describe("Splash Joker", () => {
       handInfo: newHandInfo(),
       jokers: [],
       rounds: ["10H,10S,2C,3D,4H"], // Same hand
-      bossBlind: null,
     };
 
     const resultsWithSplash = scoreRounds(state);
