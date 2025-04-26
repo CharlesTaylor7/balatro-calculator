@@ -502,3 +502,44 @@ describe("Boss Blind Effects", () => {
   });
 });
 
+
+describe("Splash Joker", () => {
+  it("allows all cards to contribute to scoring when Splash joker is present", () => {
+    // Setup a hand with a pair of 10s and other cards that wouldn't normally score
+    const state: RoundInfo = {
+      handInfo: newHandInfo(),
+      jokers: [
+        {
+          id: "splash-joker",
+          chips: 0,
+          mult: 0,
+          xmult: 1,
+          vars: {
+            kind: "simple",
+            name: "Splash",
+          },
+        },
+      ],
+      rounds: ["10H,10S,2C,3D,4H"], // Pair of 10s with unrelated cards
+      bossBlind: null,
+    };
+
+    // Same hand but without Splash joker for comparison
+    const stateWithoutSplash: RoundInfo = {
+      handInfo: newHandInfo(),
+      jokers: [],
+      rounds: ["10H,10S,2C,3D,4H"], // Same hand
+      bossBlind: null,
+    };
+
+    const resultsWithSplash = scoreRounds(state);
+    const resultsWithoutSplash = scoreRounds(stateWithoutSplash);
+
+    // Both should score as a pair
+    expect(resultsWithSplash[0]?.name).toBe("pair");
+    expect(resultsWithoutSplash[0]?.name).toBe("pair");
+
+    // The hand with Splash should have higher chips value because all cards contribute
+    expect(resultsWithSplash[0]?.chips).toBeGreaterThan(resultsWithoutSplash[0]?.chips);
+  });
+});
