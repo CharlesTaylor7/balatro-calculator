@@ -4,11 +4,11 @@ import {
   displayCounter,
   parseHand,
   applyBossBlindDebuffs,
+  newScoringContext,
   type CounterJoker,
   type ScoringContext,
   type Card,
   RoundInfo,
-  HandInfo,
   newHandInfo,
 } from "@/calculator";
 
@@ -66,15 +66,9 @@ describe("parseHand", () => {
 
 describe("applyBossBlindDebuffs", () => {
   it("debuffs heart cards with The Head", () => {
-    const context: ScoringContext = {
-      chips: 0,
-      mult: 0,
-      handInfo: newHandInfo(),
-      jokers: [],
-      pareidolia: false,
-      splash: false,
+    const context = newScoringContext({
       bossBlind: "The Head",
-    };
+    });
 
     const cards: Card[] = [
       {
@@ -104,15 +98,9 @@ describe("applyBossBlindDebuffs", () => {
   });
 
   it("debuffs face cards with The Plant", () => {
-    const context: ScoringContext = {
-      chips: 0,
-      mult: 0,
-      handInfo: newHandInfo(),
-      jokers: [],
-      pareidolia: false,
-      splash: false,
+    const context = newScoringContext({
       bossBlind: "The Plant",
-    };
+    });
 
     const cards: Card[] = [
       {
@@ -152,15 +140,10 @@ describe("applyBossBlindDebuffs", () => {
   });
 
   it("debuffs all cards with The Plant when pareidolia is active", () => {
-    const context: ScoringContext = {
-      chips: 0,
-      mult: 0,
-      handInfo: newHandInfo(),
-      jokers: [],
+    const context = newScoringContext({
       pareidolia: true,
-      splash: false,
       bossBlind: "The Plant",
-    };
+    });
 
     const cards: Card[] = [
       {
@@ -518,3 +501,4 @@ describe("Boss Blind Effects", () => {
     expect(results[2]).toBeNull();
   });
 });
+

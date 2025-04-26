@@ -508,9 +508,30 @@ export function displayCounter(joker: CounterJoker): string {
   }
 }
 
+/**
+ * Creates a new ScoringContext with default values that can be overridden with partial values.
+ * This is useful for testing and creating contexts with minimal configuration.
+ *
+ * @param partial - Optional partial ScoringContext values to override defaults
+ * @returns A complete ScoringContext with all required fields
+ */
+export function newScoringContext(partial?: Partial<ScoringContext>): ScoringContext {
+  const defaults: ScoringContext = {
+    chips: 0,
+    mult: 0,
+    handInfo: newHandInfo(),
+    jokers: [],
+    pareidolia: false,
+    splash: false,
+    playedHandTypes: new Set<PokerHand>(),
+  };
+
+  return { ...defaults, ...partial };
+}
+
 export function applyBossBlindDebuffs(
   context: ScoringContext,
-  cards: Card[],
+  cards: Card[]
 ): void {
   if (!context.bossBlind) return;
 
@@ -737,7 +758,7 @@ function scorePokerHand(context: ScoringContext, hand: PokerHand) {
         break;
     }
   }
-  let scaling = context.handInfo[hand].lvl - 1;
+  const scaling = context.handInfo[hand].lvl - 1;
 
   context.chips += baseChips + scaling * HAND_SCALING[hand].chips;
   context.mult += baseMult + scaling * HAND_SCALING[hand].mult;
