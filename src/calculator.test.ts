@@ -504,15 +504,11 @@ describe("Splash Joker", () => {
     const state: RoundInfo = {
       handInfo: newHandInfo(),
       jokers: [newJoker("Splash")],
-      rounds: ["10H,10S,2C,3D,4H"], // Pair of 10s with unrelated cards
+      rounds: ["TH,TS,2C,3D,4H"], // Pair of 10s with unrelated cards
     };
 
     // Same hand but without Splash joker for comparison
-    const stateWithoutSplash: RoundInfo = {
-      handInfo: newHandInfo(),
-      jokers: [],
-      rounds: ["10H,10S,2C,3D,4H"], // Same hand
-    };
+    const stateWithoutSplash = {...state, jokers: []}
 
     const resultsWithSplash = scoreRounds(state);
     const resultsWithoutSplash = scoreRounds(stateWithoutSplash);
