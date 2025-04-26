@@ -42,28 +42,9 @@ describe("displayCounter", () => {
   });
 });
 
-describe("parseHand", () => {
-  it("parses a simple hand correctly", () => {
-    const hand = "AH,KH,QH,JH,TH";
-    const cards = parseHand(hand);
 
-    expect(cards.length).toBe(5);
-    expect(cards[0].rank).toBe("A");
-    expect(cards[0].suit).toBe("H");
-    expect(cards[4].rank).toBe("T");
-    expect(cards[4].suit).toBe("H");
-  });
 
-  it("parses a hand with custom values correctly", () => {
-    const hand = "AH C10 M5,KH X2";
-    const cards = parseHand(hand);
 
-    expect(cards.length).toBe(2);
-    expect(cards[0].chips).toBe(10);
-    expect(cards[0].mult).toBe(5);
-    expect(cards[1].xmult).toBe(2);
-  });
-});
 
 describe("applyBossBlindDebuffs", () => {
   it("debuffs heart cards with The Head", () => {
@@ -174,6 +155,8 @@ describe("applyBossBlindDebuffs", () => {
   });
 });
 
+
+
 // Add more test cases for specific scoring scenarios
 describe("Scoring", () => {
   it("scores a royal flush correctly", () => {
@@ -282,6 +265,8 @@ describe("Scoring", () => {
     expect(results[0]?.name).toBe("high-card");
   });
 });
+
+
 
 describe("Boss Blind Effects", () => {
   it("applies 'The Arm' to decrease hand level by 1", () => {
@@ -498,6 +483,8 @@ describe("Boss Blind Effects", () => {
   });
 });
 
+
+
 describe("Splash Joker", () => {
   it("allows all cards to contribute to scoring when Splash joker is present", () => {
     // Setup a hand with a pair of 10s and other cards that wouldn't normally score
@@ -523,3 +510,27 @@ describe("Splash Joker", () => {
     );
   });
 });
+
+
+describe("parseHand", () => {
+  it("parses a simple hand correctly", () => {
+    const hand = "AH,KH,QH,JH,TH";
+    const cards = parseHand(hand);
+
+    expect(cards).toMatchObject([
+      { rank: "A", suit: "H" },
+      { rank: "K", suit: "H" },
+      { rank: "Q", suit: "H" },
+      { rank: "J", suit: "H" },
+      { rank: "T", suit: "H" },
+    ]);
+  });
+
+  it("parses a hand with custom values correctly", () => {
+    const hand = "AH C10 M5,KH X2";
+    const cards = parseHand(hand);
+
+    expect(cards).toMatchObject  ([{ rank:"A", suit: "H", chips: 10, mult: 5, xmult: 1 }, { rank: "K", suit: "H", chips: 0, mult: 0, xmult: 2 }]);
+  });
+});
+
