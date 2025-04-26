@@ -26,7 +26,7 @@ export const useAppState = create(
         // eslint-disable-next-line no-type-assertion/no-type-assertion
         stake: "white" as Stake,
         // eslint-disable-next-line no-type-assertion/no-type-assertion
-        bossBlind: undefined as BossBlind | undefined,
+        bossBlind: null as BossBlind | null,
       },
       (set, get) => ({
         setJokers: (jokers: Joker[]) => set({ jokers }),

@@ -17,9 +17,7 @@ export type HandInfo = Record<PokerHand, { lvl: number; count: number }>;
 export type ScoringContext = Score & {
   handInfo: HandInfo;
   jokers: Joker[];
-  pareidolia: boolean;
-  splash: boolean;
-  bossBlind?: BossBlind;
+  bossBlind: BossBlind | null;
   playedHandTypes: Set<PokerHand>; // Track played hand types for The Eye and The Mouth
 };
 
@@ -301,6 +299,11 @@ export function scoreHand(
     return rankToOrder(b.rank) - rankToOrder(a.rank);
   });
 
+  // Check if Splash joker is present
+  const hasSplash = context.jokers.some(joker => 
+    joker.vars.kind === "simple" && joker.vars.name === "Splash"
+  );
+
   // Try to match the hand against known poker hands
   for (const handName of HANDS) {
     const handCards = HAND_MATCHERS[handName]({ cards, groups });
@@ -331,9 +334,14 @@ export function scoreHand(
       // Apply base scoring for the hand
       scorePokerHand(context, handName);
 
-      // Add card values to chips (only for non-debuffed cards)
+      // Identify which cards are part of the hand pattern
+      const handCardSet = new Set(handCards);
+      
+      // Add card values to chips
       for (const card of cards) {
-        if (!card.debuffed) {
+        // For Splash joker, score all non-debuffed cards
+        // For normal scoring, only score cards that are part of the hand pattern
+        if (!card.debuffed && (hasSplash || handCardSet.has(card))) {
           context.chips += rankToChips(card.rank) + card.chips;
           context.mult += card.mult;
           context.mult *= card.xmult;
@@ -349,7 +357,9 @@ export function scoreHand(
 
         // Apply joker effects to each non-debuffed card
         for (const card of cards) {
-          if (!card.debuffed) {
+          // For Splash joker, apply effects to all non-debuffed cards
+          // For normal scoring, only apply to cards that are part of the hand pattern
+          if (!card.debuffed && (hasSplash || handCardSet.has(card))) {
             visitCard(context, joker, card);
           }
         }
@@ -420,17 +430,11 @@ export type RoundInfo = Pick<
   "handInfo" | "jokers" | "rounds" | "bossBlind"
 >;
 export function scoreRounds(state: RoundInfo): (Hand | null)[] {
-  const scoringContext: ScoringContext = {
-    chips: 0,
-    mult: 0,
+  const scoringContext: ScoringContext = newScoringContext({
     handInfo: cloneDeep(state.handInfo),
     jokers: cloneDeep(state.jokers),
-    pareidolia: state.jokers.some((j) => j.vars.name === "Pareidolia"),
-    splash: state.jokers.some((j) => j.vars.name === "Splash"),
     bossBlind: state.bossBlind,
-    playedHandTypes: new Set<PokerHand>(), // Track played hand types for The Eye and The Mouth
-  };
-
+  });
   const hands: (Hand | null)[] = [];
   let cumulative = 0;
   for (const hand of state.rounds) {
@@ -482,7 +486,7 @@ export function parseHand(hand: string): Card[] {
 }
 
 function isFaceCard(rank: Rank, context: ScoringContext) {
-  return rank === "K" || rank === "Q" || rank === "J" || context.pareidolia;
+  return rank === "K" || rank === "Q" || rank === "J" || context.jokers.some((j) => j.vars.name === "Pareidolia");
 }
 
 // Apply boss blind debuffs to cards in a hand
@@ -515,18 +519,15 @@ export function displayCounter(joker: CounterJoker): string {
  * @param partial - Optional partial ScoringContext values to override defaults
  * @returns A complete ScoringContext with all required fields
  */
-export function newScoringContext(partial?: Partial<ScoringContext>): ScoringContext {
-  const defaults: ScoringContext = {
-    chips: 0,
-    mult: 0,
-    handInfo: newHandInfo(),
-    jokers: [],
-    pareidolia: false,
-    splash: false,
-    playedHandTypes: new Set<PokerHand>(),
-  };
-
-  return { ...defaults, ...partial };
+export function newScoringContext(partial?: Partial<ScoringContext> & {handInfo?: Partial<HandInfo>}): ScoringContext {
+  return ({
+    chips: partial?.chips ?? 0,
+    mult: partial?.mult ?? 0,
+    handInfo: newHandInfo(partial?.handInfo),
+    jokers: partial?.jokers ?? [],
+    playedHandTypes: partial?.playedHandTypes ?? new Set<PokerHand>(),
+    bossBlind: partial?.bossBlind ?? null,
+  });
 }
 
 export function applyBossBlindDebuffs(
