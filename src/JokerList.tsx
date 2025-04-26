@@ -66,7 +66,7 @@ export function JokerList() {
   }
 
   return (
-    <div className="flex flex-col items-start gap-2">
+    <div className="flex flex-col items-start gap-2 w-full">
       <Button variant="default" onClick={() => pushJoker(null)}>
         New Joker
       </Button>
@@ -112,9 +112,9 @@ function JokerComponent({ joker, index }: JokerProps) {
   const jokerName = joker.vars.name || undefined;
 
   return (
-    <Card ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <CardHeader className="flex">
-        <CardTitle>
+    <Card className="w-full" ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <CardHeader className="flex justify-between items-center">
+        <CardTitle className="w-full max-w-[300px]">
           <Select
             value={jokerName}
             onValueChange={(name) => updateJoker(index, "vars", { name })}
@@ -158,40 +158,46 @@ function JokerComponent({ joker, index }: JokerProps) {
             </div>
           </div>
         )}
-        <div className="flex flex-row gap-2 items-center">
-          <Label htmlFor={chipsId}>Chips</Label>
-          <Input
-            className="w-20"
-            id={chipsId}
-            type="number"
-            min={0}
-            value={joker.chips}
-            onChange={(e) =>
-              updateJoker(index, "chips", Number(e.target.value))
-            }
-          />
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex items-center gap-2">
+            <Label htmlFor={chipsId}>Chips</Label>
+            <Input
+              className="w-20"
+              id={chipsId}
+              type="number"
+              min={0}
+              value={joker.chips}
+              onChange={(e) =>
+                updateJoker(index, "chips", Number(e.target.value))
+              }
+            />
+          </div>
 
-          <Label htmlFor={multId}>Mult</Label>
-          <Input
-            className="w-20"
-            id={multId}
-            type="number"
-            min={0}
-            value={joker.mult}
-            onChange={(e) => updateJoker(index, "mult", Number(e.target.value))}
-          />
+          <div className="flex items-center gap-2">
+            <Label htmlFor={multId}>Mult</Label>
+            <Input
+              className="w-20"
+              id={multId}
+              type="number"
+              min={0}
+              value={joker.mult}
+              onChange={(e) => updateJoker(index, "mult", Number(e.target.value))}
+            />
+          </div>
 
-          <Label htmlFor={xmultId}>xMult</Label>
-          <Input
-            className="w-20"
-            id={xmultId}
-            type="number"
-            min={1}
-            value={joker.xmult}
-            onChange={(e) =>
-              updateJoker(index, "xmult", Number(e.target.value))
-            }
-          />
+          <div className="flex items-center gap-2">
+            <Label htmlFor={xmultId}>xMult</Label>
+            <Input
+              className="w-20"
+              id={xmultId}
+              type="number"
+              min={1}
+              value={joker.xmult}
+              onChange={(e) =>
+                updateJoker(index, "xmult", Number(e.target.value))
+              }
+            />
+          </div>
         </div>
       </CardContent>
     </Card>

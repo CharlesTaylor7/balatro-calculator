@@ -269,7 +269,6 @@ export function newHandInfo(partialHandInfo?: Partial<HandInfo>): HandInfo {
  * @returns A `Scored` object containing the final hand name, chip value,
  *          and multiplier if a valid hand is found; otherwise, null.
  *
- * @throws Error if no matching hand is found.
  */
 export function scoreHand(
   context: ScoringContext,
@@ -364,7 +363,6 @@ export function scoreHand(
       mult: context.mult,
     };
   }
-  throw new Error("no matching hand");
 }
 
 function rankToOrder(rank: Rank): number {
