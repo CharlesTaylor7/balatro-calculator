@@ -20,7 +20,7 @@ export function BossBlindSelector() {
           value={bossBlind || "none"}
           onValueChange={(value) => {
             // eslint-disable-next-line no-type-assertion/no-type-assertion
-            setBossBlind(value === "none" ? undefined : (value as BossBlind))
+            setBossBlind(value === "none" ? undefined : (value as BossBlind));
           }}
         >
           <SelectTrigger id="boss-blind" className="w-[200px]">

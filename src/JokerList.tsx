@@ -46,7 +46,7 @@ export function JokerList() {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const { jokers, pushJoker, setJokers } = useAppState();

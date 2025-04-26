@@ -1,7 +1,14 @@
 import { useAppState } from "@/store";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { PokerHand } from "@/calculator";
 
@@ -9,21 +16,25 @@ export function HandCountTable() {
   const { handInfo, updateHandInfo } = useAppState();
 
   // Handle hand count changes
-  const handleHandCountChange = (hand: PokerHand, value: string, field: "lvl" | "count") => {
+  const handleHandCountChange = (
+    hand: PokerHand,
+    value: string,
+    field: "lvl" | "count",
+  ) => {
     let numValue = parseInt(value) || 0;
-    
+
     // Ensure level is never less than 1
     if (field === "lvl") {
       numValue = Math.max(1, numValue);
     }
-    
+
     updateHandInfo(hand, field, numValue);
   };
 
   // Reset all counts
   const resetCounts = () => {
     // Reset hand counts
-    Object.keys(handInfo).forEach(hand => {
+    Object.keys(handInfo).forEach((hand) => {
       // eslint-disable-next-line no-type-assertion/no-type-assertion
       updateHandInfo(hand as PokerHand, "lvl", 1);
       // eslint-disable-next-line no-type-assertion/no-type-assertion
@@ -62,7 +73,11 @@ export function HandCountTable() {
                     value={info.lvl}
                     onChange={(e) => {
                       // eslint-disable-next-line no-type-assertion/no-type-assertion
-                      handleHandCountChange(hand as PokerHand, e.target.value, "lvl")
+                      handleHandCountChange(
+                        hand as PokerHand,
+                        e.target.value,
+                        "lvl",
+                      );
                     }}
                   />
                 </TableCell>
@@ -74,7 +89,11 @@ export function HandCountTable() {
                     value={info.count}
                     onChange={(e) => {
                       // eslint-disable-next-line no-type-assertion/no-type-assertion
-                      handleHandCountChange(hand as PokerHand, e.target.value, "count")
+                      handleHandCountChange(
+                        hand as PokerHand,
+                        e.target.value,
+                        "count",
+                      );
                     }}
                   />
                 </TableCell>

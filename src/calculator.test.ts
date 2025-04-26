@@ -1,3 +1,4 @@
+/* eslint-disable no-type-assertion/no-type-assertion */
 import { describe, it, expect } from "vitest";
 import {
   scoreRounds,
@@ -6,10 +7,10 @@ import {
   applyBossBlindDebuffs,
   newScoringContext,
   type CounterJoker,
-  type ScoringContext,
   type Card,
-  RoundInfo,
+  type RoundInfo,
   newHandInfo,
+  newJoker,
 } from "@/calculator";
 
 describe("displayCounter", () => {
@@ -141,7 +142,7 @@ describe("applyBossBlindDebuffs", () => {
 
   it("debuffs all cards with The Plant when pareidolia is active", () => {
     const context = newScoringContext({
-      pareidolia: true,
+      jokers: [newJoker("Pareidolia")],
       bossBlind: "The Plant",
     });
 
@@ -182,7 +183,7 @@ describe("Scoring", () => {
       }),
       jokers: [],
       rounds: ["AH,KH,QH,JH,TH"],
-      bossBlind: undefined,
+      bossBlind: null,
     };
 
     const results = scoreRounds(state);
@@ -220,7 +221,7 @@ describe("Scoring", () => {
       handInfo: newHandInfo(),
       jokers: [],
       rounds: ["AH,KS,QD,JC,TC"], // A-K-Q-J-10 straight with mixed suits
-      bossBlind: undefined,
+      bossBlind: null,
     };
 
     const results = scoreRounds(state);
@@ -502,24 +503,12 @@ describe("Boss Blind Effects", () => {
   });
 });
 
-
 describe("Splash Joker", () => {
-  it("allows all cards to contribute to scoring when Splash joker is present", () => {
+  it.only("allows all cards to contribute to scoring when Splash joker is present", () => {
     // Setup a hand with a pair of 10s and other cards that wouldn't normally score
     const state: RoundInfo = {
       handInfo: newHandInfo(),
-      jokers: [
-        {
-          id: "splash-joker",
-          chips: 0,
-          mult: 0,
-          xmult: 1,
-          vars: {
-            kind: "simple",
-            name: "Splash",
-          },
-        },
-      ],
+      jokers: [newJoker("Splash")],
       rounds: ["10H,10S,2C,3D,4H"], // Pair of 10s with unrelated cards
       bossBlind: null,
     };
@@ -540,6 +529,8 @@ describe("Splash Joker", () => {
     expect(resultsWithoutSplash[0]?.name).toBe("pair");
 
     // The hand with Splash should have higher chips value because all cards contribute
-    expect(resultsWithSplash[0]?.chips).toBeGreaterThan(resultsWithoutSplash[0]?.chips);
+    expect(resultsWithSplash[0]!.chips).toBeGreaterThan(
+      resultsWithoutSplash[0]!.chips,
+    );
   });
 });

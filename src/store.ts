@@ -1,11 +1,6 @@
 import { create, type ExtractState } from "zustand";
 import { persist, combine } from "zustand/middleware";
-import type {
-  Joker,
-  JokerId,
-  JokerName,
-  BossBlind,
-} from "./calculator";
+import type { Joker, JokerId, JokerName, BossBlind } from "./calculator";
 import { newJoker, newHandInfo } from "./calculator";
 
 type Stake = "white" | "green" | "purple";
@@ -94,8 +89,12 @@ export const useAppState = create(
 
         setBossBlind: (bossBlind: BossBlind | undefined) => set({ bossBlind }),
 
-        updateHandInfo: (hand: PokerHand, field: "lvl" | "count", value: number) => 
-          set(state => {
+        updateHandInfo: (
+          hand: PokerHand,
+          field: "lvl" | "count",
+          value: number,
+        ) =>
+          set((state) => {
             const newHandInfo = { ...state.handInfo };
             // Ensure level is never less than 1
             if (field === "lvl") {

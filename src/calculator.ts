@@ -307,7 +307,6 @@ export function scoreHand(
   // Try to match the hand against known poker hands
   for (const handName of HANDS) {
     const handCards = HAND_MATCHERS[handName]({ cards, groups });
-    if (handCards) {
       // Check for The Eye boss blind (no repeat hand types)
       if (
         context.bossBlind === "The Eye" &&
@@ -373,7 +372,7 @@ export function scoreHand(
         chips: context.chips,
         mult: context.mult,
       };
-    }
+    
   }
   throw new Error("no matching hand");
 }
@@ -574,10 +573,6 @@ export function applyBossBlindDebuffs(
 }
 
 function visitCard(context: ScoringContext, joker: Joker, card: Card) {
-  // Skip debuffed cards
-  if (card.debuffed) {
-    return;
-  }
   switch (joker.vars.name) {
     case "Scholar":
       if (card.rank === "A") {
